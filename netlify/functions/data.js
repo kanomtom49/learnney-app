@@ -1,51 +1,97 @@
-// 1. เรียกใช้ library 'postgres' ที่เราติดตั้งไป
 const postgres = require('postgres');
 
-// 2. ส่วนที่สำคัญที่สุด: สร้างการเชื่อมต่อกับฐานข้อมูล
-// โดยดึงค่า DATABASE_URL มาจาก Environment Variable ที่เราตั้งค่าบนเว็บ Netlify
 const sql = postgres(process.env.DATABASE_URL, {
     ssl: 'require',
 });
 
-// 3. นี่คือฟังก์ชันหลักที่ Netlify จะเรียกใช้เมื่อมี request เข้ามา
-exports.handler = async (event, context) => {
-    // เราจะเขียนโค้ดทั้งหมดในนี้
-    try {
-        // ตรวจสอบว่า request ที่เข้ามาเป็นแบบ GET (ขอข้อมูล) หรือไม่
-        if (event.httpMethod === 'GET') {
+// Helper function to extract ID from path
+const getID = (path) => {
+    const parts = path.split('/');
+    return parts[parts.length - 1];
+}
 
-            // 4. สั่งให้ไปดึงข้อมูลจากตาราง subjects และ topics
+exports.handler = async (event) => {
+    const { httpMethod, path } = event;
+    const body = event.body ? JSON.parse(event.body) : null;
+
+    try {
+        // GET all data
+        if (httpMethod === 'GET' && path.endsWith('/data')) {
             const subjects = await sql`SELECT * FROM subjects ORDER BY name`;
             const topics = await sql`SELECT * FROM topics`;
-
-            // 5. ส่งข้อมูลที่ได้กลับไปให้ Frontend
-            return {
-                statusCode: 200, // 200 แปลว่าสำเร็จ
-                body: JSON.stringify({ subjects, topics }), // แปลงข้อมูลเป็น JSON text
-            };
+            return { statusCode: 200, body: JSON.stringify({ subjects, topics }) };
         }
 
-        if (httpMethod === 'POST') {
-            const body = JSON.parse(event.body);
-
-            // ตรวจสอบว่าเป็นการเพิ่ม Subject หรือไม่ จาก URL
-            if (pathParts[0] === 'subjects') {
-                const { id, name } = body;
-                // สั่งให้ SQL เพิ่มข้อมูลลงในตาราง subjects
-                const result = await sql`INSERT INTO subjects (id, name) VALUES (${id}, ${name}) RETURNING *`;
-                // ส่งข้อมูลที่สร้างเสร็จแล้วกลับไปให้ Frontend
-                return { statusCode: 201, body: JSON.stringify(result[0]) };
-            }
+        // POST (Create) a subject
+        if (httpMethod === 'POST' && path.endsWith('/data/subjects')) {
+            const { id, name } = body;
+            const result = await sql`INSERT INTO subjects (id, name) VALUES (${id}, ${name}) RETURNING *`;
+            return { statusCode: 201, body: JSON.stringify(result[0]) };
         }
-        // ถ้าไม่ใช่ GET ให้แจ้งว่าไม่เจอ (เผื่อไว้สำหรับอนาคต)
+
+        // POST (Create) a topic
+        if (httpMethod === 'POST' && path.endsWith('/data/topics')) {
+            const { id, name, subjectId, nextReview } = body;
+            const result = await sql`INSERT INTO topics (id, name, subject_id, next_review) VALUES (${id}, ${name}, ${subjectId}, ${nextReview}) RETURNING *`;
+            return { statusCode: 201, body: JSON.stringify(result[0]) };
+        }
+
+        // PUT (Update) a subject name
+        if (httpMethod === 'PUT' && path.includes('/data/subjects/')) {
+            const id = getID(path);
+            const { name } = body;
+            await sql`UPDATE subjects SET name = ${name} WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // PUT (Update) a topic name
+        if (httpMethod === 'PUT' && path.includes('/data/topics/') && body.name) {
+            const id = getID(path);
+            const { name } = body;
+            await sql`UPDATE topics SET name = ${name} WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // PUT (Update) topic rating
+        if (httpMethod === 'PUT' && path.includes('/rating')) {
+            const id = getID(path.replace('/rating', ''));
+            const { topicData } = body;
+            await sql`UPDATE topics SET 
+                stability = ${topicData.stability},
+                difficulty = ${topicData.difficulty},
+                state = ${topicData.state},
+                last_review = ${topicData.lastReview},
+                next_review = ${topicData.nextReview},
+                review_history = ${JSON.stringify(topicData.reviewHistory)}::jsonb
+             WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // PUT (Update) topic reflection
+        if (httpMethod === 'PUT' && path.includes('/reflection')) {
+            const id = getID(path.replace('/reflection', ''));
+            const { reflectionHistory } = body;
+            await sql`UPDATE topics SET reflection_history = ${JSON.stringify(reflectionHistory)}::jsonb WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // DELETE a subject
+        if (httpMethod === 'DELETE' && path.includes('/data/subjects/')) {
+            const id = getID(path);
+            await sql`DELETE FROM subjects WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
+        // DELETE a topic
+        if (httpMethod === 'DELETE' && path.includes('/data/topics/')) {
+            const id = getID(path);
+            await sql`DELETE FROM topics WHERE id = ${id}`;
+            return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+
         return { statusCode: 404, body: 'Not Found' };
-
     } catch (error) {
-        // ถ้ามีข้อผิดพลาดเกิดขึ้นระหว่างการเชื่อมต่อหรือดึงข้อมูล
         console.error(error);
-        return {
-            statusCode: 500, // 500 แปลว่า Server มีปัญหา
-            body: JSON.stringify({ error: 'Failed to connect to database' }),
-        };
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
     }
 };
