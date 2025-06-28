@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ - Learnney</title>
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            background-color: #f8f9fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body>
+
+    <div data-netlify-identity-menu></div>
+
+    <script>
+        // เมื่อผู้ใช้ login สำเร็จ ให้ redirect ไปที่หน้าแอปพลิเคชัน
+        if (window.netlifyIdentity) {
+            netlifyIdentity.on('login', user => {
+                window.location.href = '/app.html';
+            });
+        }
+    </script>
+</body>
+</html>

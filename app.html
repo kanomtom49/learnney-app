@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learnney</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay"><div class="spinner"></div></div>
+    <div id="toast-container"></div>
+
+    <div id="app-layout" class="app-layout" style="display: none;">
+        <aside class="sidebar">
+            <div class="sidebar-header"><i class="fa-solid fa-check-double"></i><span>Learnney</span></div>
+            <ul class="nav-menu">
+                <li class="nav-item"><button class="nav-btn active" data-view="dashboard"><i class="fa-solid fa-table-columns"></i><span>Dashboard</span></button></li>
+                <li class="nav-item"><button class="nav-btn" data-view="subjects"><i class="fa-solid fa-book"></i><span>บทเรียนและหัวข้อ</span></button></li>
+                <li class="nav-item"><button class="nav-btn" data-view="trouble-zone"><i class="fa-solid fa-skull-crossbones"></i><span>หัวข้อปราบเซียน</span></button></li>
+                <li class="nav-item"><button class="nav-btn" data-view="analytics"><i class="fa-solid fa-chart-pie"></i><span>สถิติ</span></button></li>
+                <li class="nav-item"><button class="nav-btn" data-view="data"><i class="fa-solid fa-database"></i><span>จัดการข้อมูล</span></button></li>
+            </ul>
+            <div class="sidebar-footer">
+                <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle theme"><i class="fas fa-sun"></i><i class="fas fa-moon"></i></button>
+            </div>
+        </aside>
+        <main class="main-content">
+            <div id="main-header-bar" class="main-header-bar">
+                <div class="search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="search" id="global-search-input" placeholder="ค้นหาหัวข้อทั้งหมด..." autocomplete="off">
+                    <div id="search-results-dropdown" class="search-dropdown"></div>
+                </div>
+
+                <div data-netlify-identity-menu></div>
+
+                <button id="add-topic-main-btn" class="btn btn-primary"><i class="fas fa-plus"></i> เพิ่มหัวข้อใหม่</button>
+            </div>
+            <div id="dashboard-view" class="view-content active">
+                <header class="page-header"><h1>Dashboard</h1></header>
+                <div id="export-reminder-banner" class="banner info-banner" style="display: none;">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p><strong>อย่าลืมสำรองข้อมูล!</strong> เพื่อป้องกันข้อมูลสูญหาย ควรส่งออกข้อมูล (Export) เป็นประจำ</p>
+                    <button id="export-reminder-btn" class="btn btn-sm">ส่งออกเลย</button>
+                </div>
+                <div class="grid-layout">
+                    <section class="card full-width-card"><div class="card-header"><h3><i class="fa-solid fa-hourglass-half"></i> นับถอยหลังวันสอบ</h3></div><div id="countdown-container" class="countdown-container"><div class="countdown-item"><span class="countdown-title">TGAT/TPAT</span><div class="countdown-timer" id="countdown-tgat"><div><span data-unit="days">0</span><label>Days</label></div><div><span data-unit="hours">00</span><label>Hours</label></div><div><span data-unit="mins">00</span><label>Mins</label></div><div><span data-unit="secs">00</span><label>Secs</label></div></div></div><div class="countdown-item"><span class="countdown-title">A-LEVEL</span><div class="countdown-timer" id="countdown-alevel"><div><span data-unit="days">0</span><label>Days</label></div><div><span data-unit="hours">00</span><label>Hours</label></div><div><span data-unit="mins">00</span><label>Mins</label></div><div><span data-unit="secs">00</span><label>Secs</label></div></div></div></div></section>
+                    <section id="coach-card" class="card full-width-card"><div class="card-header"><h3><i class="fa-solid fa-lightbulb"></i> คำแนะนำจากโค้ช</h3></div><div id="coach-advice-content" class="coach-content"></div></section>
+                    <section class="card full-width-card" id="key-stats"><div class="stats-container-grid"><div class="stat-item"><span class="stat-value" id="stats-due-value">0</span><span class="stat-label">ครบกำหนดวันนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-tomorrow-due-value">0</span><span class="stat-label">ครบกำหนดพรุ่งนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-reviews-today-value">0</span><span class="stat-label">ทบทวนแล้ววันนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-leech-count-value">0</span><span class="stat-label">หัวข้อปราบเซียน</span></div></div></section>
+                    <section class="card full-width-card" id="todays-review">
+                        <div class="card-header" style="justify-content: space-between;">
+                            <h3><i class="fa-solid fa-star"></i>ทบทวนวันนี้</h3>
+                            <button id="sort-queue-btn" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-sort-amount-down"></i> เรียงตามความสำคัญ
+                            </button>
+                        </div>
+                        <ul id="todays-queue-list" class="list"></ul>
+                    </section>
+                </div>
+            </div>
+            <div id="subjects-view" class="view-content"><header class="page-header"><h1>บทเรียนและหัวข้อ</h1></header><div class="management-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book-open"></i>บทเรียนทั้งหมด</h3></div><form id="add-subject-form" class="form-inline"><input type="text" id="new-subject-name" placeholder="เพิ่มบทเรียนใหม่..." required><button type="submit" id="add-subject-btn" class="btn btn-icon"><i class="fas fa-plus"></i></button></form><ul id="subjects-list" class="list"></ul></section><section class="card subject-details-card"><div id="subject-insights-container" style="display: none;"><div class="card-header"><h3><i class="fa-solid fa-magnifying-glass-chart"></i> ข้อมูลเชิงลึกของบทเรียน</h3></div><div class="subject-insights-layout"><div class="insight-chart-container"><canvas id="subject-overview-chart-in-subjects"></canvas></div><div class="insight-stats"><div class="insight-stat-item"><label><i class="fa-solid fa-brain"></i> หัวข้อที่ยากที่สุด (D)</label><span id="insight-hardest-topic">N/A</span></div><div class="insight-stat-item"><label><i class="fa-solid fa-calendar-day"></i> ทบทวนถัดไป</label><span id="insight-next-review">N/A</span></div></div></div></div><div class="card-header"><h3><i class="fa-solid fa-list-ul"></i>หัวข้อในบทเรียนนี้</h3></div><ul id="topics-for-subject-list" class="list"></ul></section></div></div>
+            <div id="trouble-zone-view" class="view-content"><header class="page-header"><h1><i class="fa-solid fa-skull-crossbones"></i> หัวข้อปราบเซียน (Leeches)</h1></header><p class="view-description">หัวข้อเหล่านี้คือหัวข้อที่คุณตอบผิด (Again) บ่อยครั้ง (4 ครั้งขึ้นไป) ควรให้ความสำคัญเป็นพิเศษ</p><div class="card full-width-card"><ul id="leech-list" class="list"></ul></div></div>
+            <div id="analytics-view" class="view-content"><header class="page-header"><h1><i class="fa-solid fa-chart-pie"></i> สถิติการเรียนรู้</h1></header><div class="analytics-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-brain"></i> สถิติเหตุผลการลืม</h3></div><div class="chart-wrapper"><canvas id="forget-reasons-chart"></canvas></div></section><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book"></i> ภาพรวมรายบทเรียน</h3></div><div class="chart-wrapper"><canvas id="subjects-overview-chart-in-analytics"></canvas></div></section></div></div>
+            <div id="data-view" class="view-content">
+                <header class="page-header"><h1><i class="fa-solid fa-database"></i> จัดการข้อมูล</h1></header>
+                <p class="view-description">คุณสามารถสำรองข้อมูลการเรียนรู้ทั้งหมดของคุณเป็นไฟล์ JSON หรือนำเข้าข้อมูลจากไฟล์สำรองได้</p>
+                <div class="card">
+                    <div class="data-actions">
+                        <button id="export-data-btn" class="btn btn-secondary"><i class="fas fa-file-export"></i> ส่งออกข้อมูล (Export)</button>
+                        <button id="import-data-btn" class="btn btn-secondary"><i class="fas fa-file-import"></i> นำเข้าข้อมูล (Import)</button>
+                        <input type="file" id="import-data-input" accept=".json" style="display: none;">
+                    </div>
+                </div>
+                <div class="card" style="border-color: var(--danger-color);">
+                    <div class="card-header"><h3><i class="fa-solid fa-triangle-exclamation" style="color:var(--danger-color)"></i> โซนอันตราย</h3></div>
+                    <div class="data-actions">
+                        <button id="load-sample-data-btn" class="btn btn-warning"><i class="fas fa-vial"></i> โหลดข้อมูลตัวอย่าง</button>
+                        <button id="delete-all-data-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> ลบข้อมูลทั้งหมด</button>
+                    </div>
+                    <p class="card-description" style="margin-top: 1rem; color: var(--secondary-text);"><small><strong>คำเตือน:</strong> การกระทำในส่วนนี้ไม่สามารถย้อนกลับได้ การโหลดข้อมูลตัวอย่างหรือลบข้อมูลทั้งหมดจะทำให้ข้อมูลปัจจุบันของคุณหายไปอย่างถาวร</small></p>
+                </div>
+            </div>
+        </main>
+    </div>
+    <div id="log-review-modal" class="modal-container"><div class="modal-content"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="modal-log-topic-name">กำลังทบทวน...</h3><p>คุณจำหัวข้อนี้ได้ดีแค่ไหน?</p><div class="modal-actions" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;"><button class="btn-rate rating-again" data-rating="again"><strong>Again</strong><span class="rating-desc">จำไม่ได้เลย</span></button><button class="btn-rate rating-hard" data-rating="hard"><strong>Hard</strong><span class="rating-desc">ยาก, ลังเล</span></button><button class="btn-rate rating-good" data-rating="good"><strong>Good</strong><span class="rating-desc">จำได้ดี</span></button><button class="btn-rate rating-easy" data-rating="easy"><strong>Easy</strong><span class="rating-desc">ง่ายมาก</span></button></div></div></div>
+    <div id="reflection-modal" class="modal-container"><div class="modal-content wide" style="text-align:left;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="modal-reflection-topic-name">สะท้อนผลการทบทวน (Again)</h3><p>การเข้าใจสาเหตุที่ลืม จะช่วยให้การเรียนรู้ดีขึ้นในระยะยาว</p><form id="reflection-form"><div class="reflection-form-body"><div class="form-group"><label>ทำไมถึงจำหัวข้อนี้ไม่ได้? (เลือกได้มากกว่า 1 ข้อ)</label><div id="reflection-options"><label class="checkbox-label"><input type="checkbox" name="reason" value="forgot"><span>แค่ลืมเฉยๆ (Forgot)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="confused"><span>สับสนกับหัวข้ออื่น (Confused)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="concept_issue"><span>ยังไม่เข้าใจแนวคิดหลัก (Concept Issue)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="mistake"><span>สะเพร่า/ทำพลาดง่ายๆ (Careless Mistake)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="other"><span>อื่นๆ</span></label></div></div><div class="form-group"><label for="reflection-notes">บันทึกเพิ่มเติม (ถ้ามี)</label><textarea id="reflection-notes" rows="3" placeholder="เช่น: ต้องกลับไปอ่านเรื่อง...เพิ่มเติม"></textarea></div></div><button id="reflection-submit-btn" type="submit" class="btn btn-primary" style="width:100%;">บันทึกผล</button></form></div></div>
+    <div id="topic-details-modal" class="modal-container">
+        <div class="modal-content wide">
+            <button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button>
+            <h3 id="modal-details-topic-name">รายละเอียดหัวข้อ</h3>
+            <div class="details-primary-info">
+                <div class="stat-card primary">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    <div><label>กำหนดทบทวนรอบถัดไป</label><span id="details-next-review"></span></div>
+                </div>
+                <div class="stat-card primary">
+                    <i class="fa-solid fa-brain"></i>
+                    <div><label>สถานะ</label><span id="details-state"></span></div>
+                </div>
+            </div>
+            <div class="details-section-divider"><hr><span>ข้อมูลขั้นสูง</span><hr></div>
+            <div class="details-secondary-info">
+                <div class="stat-card secondary">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <div><label>ความคงทนของความจำ (วัน) <span class="tooltip" data-tooltip="ค่าที่บ่งบอกว่าความจำนี้จะอยู่ได้นานแค่ไหน (ยิ่งเยอะยิ่งดี)"><i class="fa-solid fa-circle-info"></i></span></label><span id="details-stability"></span></div>
+                </div>
+                <div class="stat-card secondary">
+                    <i class="fa-solid fa-puzzle-piece"></i>
+                    <div><label>ระดับความยาก (ส่วนตัว) <span class="tooltip" data-tooltip="ค่าที่บ่งบอกความยากของหัวข้อนี้สำหรับคุณโดยเฉพาะ (ยิ่งน้อยยิ่งดี)"><i class="fa-solid fa-circle-info"></i></span></label><span id="details-difficulty"></span></div>
+                </div>
+            </div>
+            <div class="topic-actions-bar">
+                <button id="show-chart-btn" class="btn btn-secondary"><i class="fa-solid fa-chart-line"></i> ดูประวัติกราฟ</button>
+            </div>
+            <div class="topic-history">
+                <div class="card-header"><h4><i class="fa-solid fa-clock-rotate-left"></i> ประวัติการทบทวน</h4></div>
+                <ul id="details-history-list" class="history-list"></ul>
+            </div>
+        </div>
+    </div>
+    <div id="chart-modal" class="modal-container"><div class="modal-content wide"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="chart-modal-topic-name">ประวัติกราฟ Stability</h3><div id="chart-modal-container" class="details-chart-container"><canvas id="stability-history-chart-in-modal"></canvas></div></div></div>
+    <div id="add-topic-modal" class="modal-container"><div class="modal-content" style="max-width: 500px; text-align: left;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3><i class="fas fa-plus-circle"></i> เพิ่มหัวข้อใหม่</h3><p>เลือกบทเรียนและตั้งชื่อหัวข้อที่ต้องการเรียนรู้</p><form id="add-topic-form-modal" class="reflection-form"><div class="form-group"><label for="topic-subject-select">เลือกบทเรียน</label><select id="topic-subject-select" required></select></div><div class="form-group"><label for="new-topic-name">ชื่อหัวข้อ</label><input type="text" id="new-topic-name-modal" placeholder="เช่น 'กฎของนิวตันข้อที่ 1'" required></div><button type="submit" id="add-topic-submit-btn" class="btn btn-primary" style="width: 100%;">เพิ่มหัวข้อ</button></form></div></div>
+    <div id="welcome-modal" class="modal-container"><div class="modal-content" style="max-width: 550px; text-align: center;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 style="font-size: 1.5rem;">🚀 ยินดีต้อนรับสู่ Learnney</h3><p style="font-size: 1rem; line-height: 1.7;">แอปนี้จะช่วยให้คุณทบทวนบทเรียนได้อย่างมีประสิทธิภาพด้วยหลักการ Spaced Repetition<br>คุณต้องการเริ่มต้นอย่างไร?</p><div class="modal-actions" style="grid-template-columns: 1fr; gap: 0.75rem; margin-top:1rem;"><button class="btn btn-primary" data-action="welcome-add-subject"><i class="fas fa-plus"></i> เริ่มสร้างบทเรียนแรกของฉัน</button><button class="btn btn-secondary" data-action="welcome-load-sample"><i class="fas fa-vial"></i> ลองโหลดข้อมูลตัวอย่างเพื่อดูภาพรวม</button></div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
