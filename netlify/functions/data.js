@@ -25,6 +25,18 @@ exports.handler = async (event, context) => {
             };
         }
 
+        if (httpMethod === 'POST') {
+            const body = JSON.parse(event.body);
+
+            // ตรวจสอบว่าเป็นการเพิ่ม Subject หรือไม่ จาก URL
+            if (pathParts[0] === 'subjects') {
+                const { id, name } = body;
+                // สั่งให้ SQL เพิ่มข้อมูลลงในตาราง subjects
+                const result = await sql`INSERT INTO subjects (id, name) VALUES (${id}, ${name}) RETURNING *`;
+                // ส่งข้อมูลที่สร้างเสร็จแล้วกลับไปให้ Frontend
+                return { statusCode: 201, body: JSON.stringify(result[0]) };
+            }
+        }
         // ถ้าไม่ใช่ GET ให้แจ้งว่าไม่เจอ (เผื่อไว้สำหรับอนาคต)
         return { statusCode: 404, body: 'Not Found' };
 
