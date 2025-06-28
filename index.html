@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study Tracker Pro</title>
+    <title>Learnney</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
-        /* --- ALL CSS FROM style.css IS PASTED HERE --- */
         :root {
             --bg-main: #f8f9fa; --bg-card: #ffffff; --bg-sidebar: #111827; --bg-overlay: rgba(0,0,0,0.5);
             --border-color: #e5e7eb; --primary-text: #1f2937; --secondary-text: #6b7280; --sidebar-text: #9ca3af;
@@ -87,7 +86,7 @@
         .search-dropdown-item .context { font-size: 0.8rem; color: var(--secondary-text); }
         .search-dropdown .empty-state { padding: 1.5rem; cursor: default; }
         .list { list-style: none; padding: 0; margin: 0; }
-        .list-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; transition: background-color 0.2s ease; }
+        .list-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.5rem 1rem; padding: 0.75rem 0.5rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; transition: background-color 0.2s ease, border-left 0.2s ease; }
         .list-item:last-child { border-bottom: none; }
         .list-item .item-info { flex-grow: 1; display: flex; align-items: center; gap: 0.75rem; min-width: 0; cursor: pointer; }
         .list-item .item-info .name { flex-grow: 1; padding: 0.25rem; border-radius: 4px; border: 1px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -156,7 +155,7 @@
         @keyframes toast-in-right { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes toast-out-right { to { transform: translateX(120%); opacity: 0; } }
         .banner { display: flex; align-items: center; gap: 1rem; padding: 1rem; border-radius: 8px; }
-        #dashboard-view > .banner { margin-bottom: 1.5rem; } /* Add margin-bottom only for the banner on dashboard */
+        #dashboard-view > .banner { margin-bottom: 1.5rem; }
         .banner.info-banner { background-color: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.3); color: var(--primary-text); }
         .banner i { font-size: 1.5rem; color: var(--info-color); }
         .banner p { margin: 0; flex-grow: 1; line-height: 1.6; }
@@ -205,6 +204,23 @@
         .tooltip::after { content: attr(data-tooltip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background-color: #333; color: #fff; padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.8rem; white-space: nowrap; opacity: 0; visibility: hidden; transition: opacity 0.2s ease, visibility 0.2s ease; z-index: 10; }
         .dark-mode .tooltip::after { background-color: var(--bg-main); color: var(--primary-text); border: 1px solid var(--border-color); }
         .tooltip:hover::after { opacity: 1; visibility: visible; }
+        .priority-indicator {
+            display: inline-block;
+            width: 24px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        .list-item.priority-urgent {
+            border-left: 4px solid var(--danger-color);
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        .list-item.priority-high {
+            border-left: 4px solid var(--warning-color);
+            background-color: rgba(245, 158, 11, 0.05);
+        }
+        .list-item.priority-standard {
+            border-left: 4px solid var(--info-color);
+        }
     </style>
 </head>
 <body>
@@ -212,7 +228,7 @@
     <div id="toast-container"></div>
     <div id="app-layout" class="app-layout">
         <aside class="sidebar">
-            <div class="sidebar-header"><i class="fa-solid fa-check-double"></i><span>Study Tracker</span></div>
+            <div class="sidebar-header"><i class="fa-solid fa-check-double"></i><span>Learnney</span></div>
             <ul class="nav-menu">
                 <li class="nav-item"><button class="nav-btn active" data-view="dashboard"><i class="fa-solid fa-table-columns"></i><span>Dashboard</span></button></li>
                 <li class="nav-item"><button class="nav-btn" data-view="subjects"><i class="fa-solid fa-book"></i><span>บทเรียนและหัวข้อ</span></button></li>
@@ -233,7 +249,6 @@
                 </div>
                 <button id="add-topic-main-btn" class="btn btn-primary"><i class="fas fa-plus"></i> เพิ่มหัวข้อใหม่</button>
             </div>
-            
             <div id="dashboard-view" class="view-content active">
                 <header class="page-header"><h1>Dashboard</h1></header>
                 <div id="export-reminder-banner" class="banner info-banner" style="display: none;">
@@ -245,14 +260,20 @@
                     <section class="card full-width-card"><div class="card-header"><h3><i class="fa-solid fa-hourglass-half"></i> นับถอยหลังวันสอบ</h3></div><div id="countdown-container" class="countdown-container"><div class="countdown-item"><span class="countdown-title">TGAT/TPAT</span><div class="countdown-timer" id="countdown-tgat"><div><span data-unit="days">0</span><label>Days</label></div><div><span data-unit="hours">00</span><label>Hours</label></div><div><span data-unit="mins">00</span><label>Mins</label></div><div><span data-unit="secs">00</span><label>Secs</label></div></div></div><div class="countdown-item"><span class="countdown-title">A-LEVEL</span><div class="countdown-timer" id="countdown-alevel"><div><span data-unit="days">0</span><label>Days</label></div><div><span data-unit="hours">00</span><label>Hours</label></div><div><span data-unit="mins">00</span><label>Mins</label></div><div><span data-unit="secs">00</span><label>Secs</label></div></div></div></div></section>
                     <section id="coach-card" class="card full-width-card"><div class="card-header"><h3><i class="fa-solid fa-lightbulb"></i> คำแนะนำจากโค้ช</h3></div><div id="coach-advice-content" class="coach-content"></div></section>
                     <section class="card full-width-card" id="key-stats"><div class="stats-container-grid"><div class="stat-item"><span class="stat-value" id="stats-due-value">0</span><span class="stat-label">ครบกำหนดวันนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-tomorrow-due-value">0</span><span class="stat-label">ครบกำหนดพรุ่งนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-reviews-today-value">0</span><span class="stat-label">ทบทวนแล้ววันนี้</span></div><div class="stat-item"><span class="stat-value" id="stats-leech-count-value">0</span><span class="stat-label">หัวข้อปราบเซียน</span></div></div></section>
-                    <section class="card full-width-card" id="todays-review"><div class="card-header"><h3><i class="fa-solid fa-star"></i>ทบทวนวันนี้</h3></div><ul id="todays-queue-list" class="list"></ul></section>
+                    <section class="card full-width-card" id="todays-review">
+                        <div class="card-header" style="justify-content: space-between;">
+                            <h3><i class="fa-solid fa-star"></i>ทบทวนวันนี้</h3>
+                            <button id="sort-queue-btn" class="btn btn-secondary btn-sm">
+                                <i class="fa-solid fa-sort-amount-down"></i> เรียงตามความสำคัญ
+                            </button>
+                        </div>
+                        <ul id="todays-queue-list" class="list"></ul>
+                    </section>
                 </div>
             </div>
-
-            <div id="subjects-view" class="view-content"><header class="page-header"><h1>บทเรียนและหัวข้อ</h1></header><div class="management-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book-open"></i>บทเรียนทั้งหมด</h3></div><form id="add-subject-form" class="form-inline"><input type="text" id="new-subject-name" placeholder="เพิ่มบทเรียนใหม่..." required><button type="submit" id="add-subject-btn" class="btn btn-icon"><i class="fas fa-plus"></i></button></form><ul id="subjects-list" class="list"></ul></section><section class="card subject-details-card"><div id="subject-insights-container" style="display: none;"><div class="card-header"><h3><i class="fa-solid fa-magnifying-glass-chart"></i> ข้อมูลเชิงลึกของบทเรียน</h3></div><div class="subject-insights-layout"><div class="insight-chart-container"><canvas id="subject-overview-chart"></canvas></div><div class="insight-stats"><div class="insight-stat-item"><label><i class="fa-solid fa-brain"></i> หัวข้อที่ยากที่สุด (D)</label><span id="insight-hardest-topic">N/A</span></div><div class="insight-stat-item"><label><i class="fa-solid fa-calendar-day"></i> ทบทวนถัดไป</label><span id="insight-next-review">N/A</span></div></div></div></div><div class="card-header"><h3><i class="fa-solid fa-list-ul"></i>หัวข้อในบทเรียนนี้</h3></div><ul id="topics-for-subject-list" class="list"></ul></section></div></div>
+            <div id="subjects-view" class="view-content"><header class="page-header"><h1>บทเรียนและหัวข้อ</h1></header><div class="management-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book-open"></i>บทเรียนทั้งหมด</h3></div><form id="add-subject-form" class="form-inline"><input type="text" id="new-subject-name" placeholder="เพิ่มบทเรียนใหม่..." required><button type="submit" id="add-subject-btn" class="btn btn-icon"><i class="fas fa-plus"></i></button></form><ul id="subjects-list" class="list"></ul></section><section class="card subject-details-card"><div id="subject-insights-container" style="display: none;"><div class="card-header"><h3><i class="fa-solid fa-magnifying-glass-chart"></i> ข้อมูลเชิงลึกของบทเรียน</h3></div><div class="subject-insights-layout"><div class="insight-chart-container"><canvas id="subject-overview-chart-in-subjects"></canvas></div><div class="insight-stats"><div class="insight-stat-item"><label><i class="fa-solid fa-brain"></i> หัวข้อที่ยากที่สุด (D)</label><span id="insight-hardest-topic">N/A</span></div><div class="insight-stat-item"><label><i class="fa-solid fa-calendar-day"></i> ทบทวนถัดไป</label><span id="insight-next-review">N/A</span></div></div></div></div><div class="card-header"><h3><i class="fa-solid fa-list-ul"></i>หัวข้อในบทเรียนนี้</h3></div><ul id="topics-for-subject-list" class="list"></ul></section></div></div>
             <div id="trouble-zone-view" class="view-content"><header class="page-header"><h1><i class="fa-solid fa-skull-crossbones"></i> หัวข้อปราบเซียน (Leeches)</h1></header><p class="view-description">หัวข้อเหล่านี้คือหัวข้อที่คุณตอบผิด (Again) บ่อยครั้ง (4 ครั้งขึ้นไป) ควรให้ความสำคัญเป็นพิเศษ</p><div class="card full-width-card"><ul id="leech-list" class="list"></ul></div></div>
-            <div id="analytics-view" class="view-content"><header class="page-header"><h1><i class="fa-solid fa-chart-pie"></i> สถิติการเรียนรู้</h1></header><div class="analytics-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-brain"></i> สถิติเหตุผลการลืม</h3></div><div class="chart-wrapper"><canvas id="forget-reasons-chart"></canvas></div></section><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book"></i> ภาพรวมรายบทเรียน</h3></div><div class="chart-wrapper"><canvas id="subjects-overview-chart"></canvas></div></section></div></div>
-            
+            <div id="analytics-view" class="view-content"><header class="page-header"><h1><i class="fa-solid fa-chart-pie"></i> สถิติการเรียนรู้</h1></header><div class="analytics-layout"><section class="card"><div class="card-header"><h3><i class="fa-solid fa-brain"></i> สถิติเหตุผลการลืม</h3></div><div class="chart-wrapper"><canvas id="forget-reasons-chart"></canvas></div></section><section class="card"><div class="card-header"><h3><i class="fa-solid fa-book"></i> ภาพรวมรายบทเรียน</h3></div><div class="chart-wrapper"><canvas id="subjects-overview-chart-in-analytics"></canvas></div></section></div></div>
             <div id="data-view" class="view-content">
                 <header class="page-header"><h1><i class="fa-solid fa-database"></i> จัดการข้อมูล</h1></header>
                 <p class="view-description">คุณสามารถสำรองข้อมูลการเรียนรู้ทั้งหมดของคุณเป็นไฟล์ JSON หรือนำเข้าข้อมูลจากไฟล์สำรองได้</p>
@@ -274,7 +295,6 @@
             </div>
         </main>
     </div>
-
     <div id="log-review-modal" class="modal-container"><div class="modal-content"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="modal-log-topic-name">กำลังทบทวน...</h3><p>คุณจำหัวข้อนี้ได้ดีแค่ไหน?</p><div class="modal-actions" style="grid-template-columns: 1fr 1fr; gap: 0.75rem;"><button class="btn-rate rating-again" data-rating="again"><strong>Again</strong><span class="rating-desc">จำไม่ได้เลย</span></button><button class="btn-rate rating-hard" data-rating="hard"><strong>Hard</strong><span class="rating-desc">ยาก, ลังเล</span></button><button class="btn-rate rating-good" data-rating="good"><strong>Good</strong><span class="rating-desc">จำได้ดี</span></button><button class="btn-rate rating-easy" data-rating="easy"><strong>Easy</strong><span class="rating-desc">ง่ายมาก</span></button></div></div></div>
     <div id="reflection-modal" class="modal-container"><div class="modal-content wide" style="text-align:left;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="modal-reflection-topic-name">สะท้อนผลการทบทวน (Again)</h3><p>การเข้าใจสาเหตุที่ลืม จะช่วยให้การเรียนรู้ดีขึ้นในระยะยาว</p><form id="reflection-form"><div class="reflection-form-body"><div class="form-group"><label>ทำไมถึงจำหัวข้อนี้ไม่ได้? (เลือกได้มากกว่า 1 ข้อ)</label><div id="reflection-options"><label class="checkbox-label"><input type="checkbox" name="reason" value="forgot"><span>แค่ลืมเฉยๆ (Forgot)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="confused"><span>สับสนกับหัวข้ออื่น (Confused)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="concept_issue"><span>ยังไม่เข้าใจแนวคิดหลัก (Concept Issue)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="mistake"><span>สะเพร่า/ทำพลาดง่ายๆ (Careless Mistake)</span></label><label class="checkbox-label"><input type="checkbox" name="reason" value="other"><span>อื่นๆ</span></label></div></div><div class="form-group"><label for="reflection-notes">บันทึกเพิ่มเติม (ถ้ามี)</label><textarea id="reflection-notes" rows="3" placeholder="เช่น: ต้องกลับไปอ่านเรื่อง...เพิ่มเติม"></textarea></div></div><button id="reflection-submit-btn" type="submit" class="btn btn-primary" style="width:100%;">บันทึกผล</button></form></div></div>
     <div id="topic-details-modal" class="modal-container">
@@ -313,14 +333,12 @@
     </div>
     <div id="chart-modal" class="modal-container"><div class="modal-content wide"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 id="chart-modal-topic-name">ประวัติกราฟ Stability</h3><div id="chart-modal-container" class="details-chart-container"><canvas id="stability-history-chart-in-modal"></canvas></div></div></div>
     <div id="add-topic-modal" class="modal-container"><div class="modal-content" style="max-width: 500px; text-align: left;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3><i class="fas fa-plus-circle"></i> เพิ่มหัวข้อใหม่</h3><p>เลือกบทเรียนและตั้งชื่อหัวข้อที่ต้องการเรียนรู้</p><form id="add-topic-form-modal" class="reflection-form"><div class="form-group"><label for="topic-subject-select">เลือกบทเรียน</label><select id="topic-subject-select" required></select></div><div class="form-group"><label for="new-topic-name">ชื่อหัวข้อ</label><input type="text" id="new-topic-name-modal" placeholder="เช่น 'กฎของนิวตันข้อที่ 1'" required></div><button type="submit" id="add-topic-submit-btn" class="btn btn-primary" style="width: 100%;">เพิ่มหัวข้อ</button></form></div></div>
-    <div id="welcome-modal" class="modal-container"><div class="modal-content" style="max-width: 550px; text-align: center;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 style="font-size: 1.5rem;">🚀 ยินดีต้อนรับสู่ Study Tracker Pro!</h3><p style="font-size: 1rem; line-height: 1.7;">แอปนี้จะช่วยให้คุณทบทวนบทเรียนได้อย่างมีประสิทธิภาพด้วยหลักการ Spaced Repetition<br>คุณต้องการเริ่มต้นอย่างไร?</p><div class="modal-actions" style="grid-template-columns: 1fr; gap: 0.75rem; margin-top:1rem;"><button class="btn btn-primary" data-action="welcome-add-subject"><i class="fas fa-plus"></i> เริ่มสร้างบทเรียนแรกของฉัน</button><button class="btn btn-secondary" data-action="welcome-load-sample"><i class="fas fa-vial"></i> ลองโหลดข้อมูลตัวอย่างเพื่อดูภาพรวม</button></div></div></div>
+    <div id="welcome-modal" class="modal-container"><div class="modal-content" style="max-width: 550px; text-align: center;"><button class="modal-close-btn" aria-label="Close modal"><i class="fas fa-times"></i></button><h3 style="font-size: 1.5rem;">🚀 ยินดีต้อนรับสู่ Learnney</h3><p style="font-size: 1rem; line-height: 1.7;">แอปนี้จะช่วยให้คุณทบทวนบทเรียนได้อย่างมีประสิทธิภาพด้วยหลักการ Spaced Repetition<br>คุณต้องการเริ่มต้นอย่างไร?</p><div class="modal-actions" style="grid-template-columns: 1fr; gap: 0.75rem; margin-top:1rem;"><button class="btn btn-primary" data-action="welcome-add-subject"><i class="fas fa-plus"></i> เริ่มสร้างบทเรียนแรกของฉัน</button><button class="btn btn-secondary" data-action="welcome-load-sample"><i class="fas fa-vial"></i> ลองโหลดข้อมูลตัวอย่างเพื่อดูภาพรวม</button></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    
+
     <script>
-    // --- JavaScript is unchanged from the last working version ---
-    // --- ALL JAVASCRIPT IS NOW INLINE ---
     class StudyService {
         constructor() {
             this.FSRS_PARAMS = {
@@ -331,71 +349,67 @@
             this.FACTOR = (Math.pow(this.FSRS_PARAMS.request_retention, 1 / this.DECAY) - 1);
             this.subjects = [];
             this.topics = [];
-            this.loadDataFromLocalStorage();
         }
-        
-        getAllData() { return { subjects: this.subjects, topics: this.topics }; }
-        loadAllData(data) {
-            if (data && Array.isArray(data.subjects) && Array.isArray(data.topics)) {
-                this.subjects = data.subjects;
-                this.topics = data.topics.map(topic => ({
-                   ...topic,
-                    nextReview: topic.nextReview ? new Date(topic.nextReview) : null,
-                    lastReview: topic.lastReview ? new Date(topic.lastReview) : null,
-                    createdAt: topic.createdAt ? new Date(topic.createdAt) : new Date(),
-                    reviewHistory: topic.reviewHistory || [],
-                    reflectionHistory: topic.reflectionHistory || []
+
+        // --- Data Fetching ---
+        async loadDataFromServer() {
+            try {
+                const response = await fetch('/.netlify/functions/data');
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.statusText}`);
+                }
+                const data = await response.json();
+
+                this.subjects = data.subjects || [];
+                this.topics = (data.topics || []).map(topic => ({
+                    ...topic,
+                    id: Number(topic.id),
+                    subjectId: Number(topic.subject_id),
+                    nextReview: topic.next_review ? new Date(topic.next_review) : null,
+                    lastReview: topic.last_review ? new Date(topic.last_review) : null,
+                    createdAt: topic.created_at ? new Date(topic.created_at) : new Date(),
+                    reviewHistory: topic.review_history || [],
+                    reflectionHistory: topic.reflection_history || []
                 }));
                 return { success: true };
+            } catch (error) {
+                console.error("Error loading data from server:", error);
+                showToast('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error');
+                return { success: false, message: error.message };
             }
-            return { success: false, message: 'Invalid data structure in file.' };
         }
-        deleteAllData() {
-            this.subjects = [];
-            this.topics = [];
-            this.saveDataToLocalStorage();
-        }
-        generateSampleData() {
-            this.deleteAllData();
-            const sub1 = this.addSubject("คณิตศาสตร์ (Math)");
-            const sub2 = this.addSubject("ฟิสิกส์ (Physics)");
-            const sub3 = this.addSubject("เคมี (Chemistry)");
-            const sub4 = this.addSubject("ภาษาอังกฤษ (English)");
-            const t1 = this.addTopic("อนุพันธ์ (Derivatives)", sub1.id);
-            this.updateTopicRating(t1.id, 'good'); this.updateTopicRating(t1.id, 'good'); this.updateTopicRating(t1.id, 'easy');
-            const t2 = this.addTopic("กฎการเคลื่อนที่ของนิวตัน (Newton's Laws)", sub2.id);
-            this.updateTopicRating(t2.id, 'again');
-            this.logReflection(t2.id, new Date(), 'again', ['confused', 'concept_issue'], 'สับสนระหว่างกฎข้อ 1 กับ 3');
-            this.updateTopicRating(t2.id, 'hard'); this.updateTopicRating(t2.id, 'again');
-            this.logReflection(t2.id, new Date(), 'again', ['concept_issue'], '');
-            this.updateTopicRating(t2.id, 'again'); this.logReflection(t2.id, new Date(), 'again', ['forgot'], '');
-            this.updateTopicRating(t2.id, 'again'); this.logReflection(t2.id, new Date(), 'again', ['confused'], 'ยังจำสูตรไม่ได้');
-            const t3 = this.addTopic("ตารางธาตุ (Periodic Table)", sub3.id);
-            this.updateTopicRating(t3.id, 'again'); this.logReflection(t3.id, new Date(), 'again', ['mistake'], 'จำเลขหมู่ผิด');
-            this.updateTopicRating(t3.id, 'hard'); this.updateTopicRating(t3.id, 'good');
-            this.addTopic("อินทิกรัล (Integrals)", sub1.id);
-            this.addTopic("พลังงานจลน์ (Kinetic Energy)", sub2.id);
-            this.addTopic("โมเมนตัม (Momentum)", sub2.id);
-            const t7 = this.addTopic("พันธะเคมี (Chemical Bonding)", sub3.id);
-            this.updateTopicRating(t7.id, 'good');
-            const t8 = this.addTopic("Tenses (12 tenses)", sub4.id);
-            this.updateTopicRating(t8.id, 'hard'); this.updateTopicRating(t8.id, 'good');
-            const t9 = this.addTopic("If-Clauses", sub4.id);
-            this.updateTopicRating(t9.id, 'again'); this.logReflection(t9.id, new Date(), 'again', ['confused'], 'สับสน Type 2 กับ 3');
-            this.updateTopicRating(t9.id, 'hard');
-            this.addTopic("สถิติเบื้องต้น (Basic Statistics)", sub1.id);
-            this.addTopic("ไฟฟ้ากระแสตรง (Direct Current)", sub2.id);
-            this.addTopic("สารละลาย (Solutions)", sub3.id);
-        }
-        addSubject(name) {
+
+        // --- Subjects ---
+        async addSubject(name) {
             const trimmedName = name.trim();
             if (!trimmedName) return null;
-            if (this.subjects.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) return null;
-            const newSubject = { id: Date.now(), name: trimmedName };
-            this.subjects.push(newSubject);
-            return newSubject;
+            if (this.subjects.some(s => s.name.toLowerCase() === trimmedName.toLowerCase())) {
+                showToast('มีบทเรียนชื่อนี้อยู่แล้ว', 'error');
+                return null;
+            }
+
+            const newSubjectData = { id: Date.now(), name: trimmedName };
+
+            try {
+                const response = await fetch('/.netlify/functions/data/subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newSubjectData)
+                });
+                if (!response.ok) throw new Error('Failed to add subject');
+
+                const createdSubject = await response.json();
+                this.subjects.push(createdSubject);
+                this.subjects.sort((a, b) => a.name.localeCompare(b.name, 'th'));
+                return createdSubject;
+            } catch (error) {
+                console.error('Failed to add subject:', error);
+                showToast('เกิดข้อผิดพลาดในการเพิ่มบทเรียน', 'error');
+                return null;
+            }
         }
-        editSubject(id, newName) {
+
+        async editSubject(id, newName) {
             const subjectId = Number(id);
             const trimmedName = newName.trim();
             if (!trimmedName) return { success: false, message: 'ชื่อบทเรียนห้ามว่างเปล่า' };
@@ -404,85 +418,207 @@
             }
             const subject = this.subjects.find(s => s.id === subjectId);
             if (subject) {
-                subject.name = trimmedName;
-                this.saveDataToLocalStorage();
-                return { success: true };
+                try {
+                    await fetch (`/.netlify/functions/data/subjects/${subjectId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: trimmedName })
+                    });
+                    subject.name = trimmedName; // Update local state
+                    return { success: true };
+                } catch(error) {
+                    console.error('Failed to edit subject:', error);
+                    return { success: false, message: 'เกิดข้อผิดพลาดในการแก้ไข' };
+                }
             }
             return { success: false, message: 'ไม่พบบทเรียน' };
         }
-        deleteSubject(id) {
+
+        async deleteSubject(id) {
             const subjectId = Number(id);
-            this.topics = this.topics.filter(t => t.subjectId !== subjectId);
-            this.subjects = this.subjects.filter(s => s.id !== subjectId);
-            this.saveDataToLocalStorage();
+            try {
+                await fetch (`/.netlify/functions/data/subjects/${subjectId}`, { method: 'DELETE' });
+                this.subjects = this.subjects.filter(s => s.id !== subjectId);
+                this.topics = this.topics.filter(t => t.subjectId !== subjectId);
+            } catch (error) {
+                console.error('Failed to delete subject:', error);
+                showToast('เกิดข้อผิดพลาดในการลบ', 'error');
+            }
         }
+
         getAllSubjects() { return [...this.subjects].sort((a, b) => a.name.localeCompare(b.name, 'th')); }
         getSubjectNameById(id) {
             const subject = this.subjects.find(s => s.id === Number(id));
             return subject ? subject.name : 'N/A';
         }
-        getSubjectInsights(subjectId) {
-            const numSubjectId = Number(subjectId);
-            const subjectTopics = this.topics.filter(t => t.subjectId === numSubjectId);
-            if (subjectTopics.length === 0) {
-                return { stateDistribution: { new: 0, learning: 0, review: 0 }, hardestTopic: null, nextReviewTopic: null };
-            }
-            const stateDistribution = { new: 0, learning: 0, review: 0 };
-            subjectTopics.forEach(topic => {
-                let state = (topic.state || 'New').toLowerCase();
-                if (state === 'relearning' || state === 'learning') {
-                    stateDistribution.learning++;
-                } else if (state === 'review') {
-                    stateDistribution.review++;
-                } else {
-                    stateDistribution.new++;
-                }
-            });
-            const hardestTopic = [...subjectTopics].sort((a, b) => b.difficulty - a.difficulty)[0];
-            const nextReviewTopic = [...subjectTopics].filter(t => t.nextReview).sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview))[0];
-            return { stateDistribution, hardestTopic, nextReviewTopic };
-        }
-        addTopic(name, subjectId) {
+
+        // --- Topics ---
+        async addTopic(name, subjectId) {
             const trimmedName = name.trim();
             const numSubjectId = Number(subjectId);
             if (!trimmedName || !numSubjectId) return null;
-            const newTopic = {
+
+            const newTopicData = {
                 id: Date.now() + Math.random(),
-                name: trimmedName, subjectId: numSubjectId,
-                stability: 0, difficulty: 0,
-                state: 'New', lastReview: null,
-                nextReview: new Date(), createdAt: new Date(),
-                reviewHistory: [], reflectionHistory: []
+                name: trimmedName,
+                subjectId: numSubjectId,
+                nextReview: new Date().toISOString()
             };
-            this.topics.push(newTopic);
-            return newTopic;
+
+            try {
+                const response = await fetch('/.netlify/functions/data/topics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newTopicData)
+                });
+                if (!response.ok) throw new Error('Failed to add topic');
+
+                const createdTopicRaw = await response.json();
+                const createdTopic = {
+                     ...createdTopicRaw,
+                    id: Number(createdTopicRaw.id),
+                    subjectId: Number(createdTopicRaw.subject_id),
+                    nextReview: createdTopicRaw.next_review ? new Date(createdTopicRaw.next_review) : null,
+                    lastReview: createdTopicRaw.last_review ? new Date(createdTopicRaw.last_review) : null,
+                    createdAt: createdTopicRaw.created_at ? new Date(createdTopicRaw.created_at) : new Date(),
+                    reviewHistory: createdTopicRaw.review_history || [],
+                    reflectionHistory: createdTopicRaw.reflection_history || []
+                };
+
+                this.topics.push(createdTopic);
+                return createdTopic;
+            } catch(error) {
+                console.error('Failed to add topic:', error);
+                showToast('เกิดข้อผิดพลาดในการเพิ่มหัวข้อ', 'error');
+                return null;
+            }
         }
-        editTopic(id, newName) {
+
+        async editTopic(id, newName) {
             const topicId = Number(id);
             const trimmedName = newName.trim();
             if (!trimmedName) return { success: false, message: 'ชื่อหัวข้อห้ามว่างเปล่า' };
+
             const topic = this.topics.find(t => t.id === topicId);
             if (topic) {
                 if (this.topics.some(t => t.id !== topicId && t.subjectId === topic.subjectId && t.name.toLowerCase() === trimmedName.toLowerCase())) {
                     return { success: false, message: 'มีหัวข้อชื่อนี้ในบทเรียนเดียวกันแล้ว' };
                 }
-                topic.name = trimmedName;
-                this.saveDataToLocalStorage();
-                return { success: true };
+                try {
+                     await fetch (`/.netlify/functions/data/topics/${topicId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: trimmedName })
+                    });
+                    topic.name = trimmedName;
+                    return { success: true };
+                } catch(error) {
+                    console.error('Failed to edit topic:', error);
+                    return { success: false, message: 'เกิดข้อผิดพลาดในการแก้ไข' };
+                }
             }
             return { success: false, message: 'ไม่พบหัวข้อ' };
         }
+
+        async deleteTopic(id) {
+            try {
+                await fetch (`/.netlify/functions/data/topics/${Number(id)}`, { method: 'DELETE' });
+                this.topics = this.topics.filter(t => t.id !== Number(id));
+            } catch(error) {
+                console.error('Failed to delete topic:', error);
+                showToast('เกิดข้อผิดพลาดในการลบ', 'error');
+            }
+        }
+
+        async updateTopicRating(id, ratingStr) {
+            const topic = this.getTopicById(id);
+            if (!topic) return;
+
+            const ratingMap = { again: 1, hard: 2, good: 3, easy: 4 };
+            const rating = ratingMap[ratingStr];
+            const w = this.FSRS_PARAMS.w;
+            const now = new Date();
+            const lastReviewDate = topic.lastReview ? new Date(topic.lastReview) : new Date(topic.createdAt);
+            const elapsed_days = Math.max(0, (now.getTime() - lastReviewDate.getTime()) / (1000 * 3600 * 24));
+
+            const oldState = topic.state;
+            if (oldState === 'New') {
+                topic.difficulty = w[4] - w[5] * (rating - 3);
+                topic.stability = w[rating - 1];
+            } else {
+                const retrievability = Math.pow(1 + elapsed_days / (9 * topic.stability), this.DECAY);
+                topic.difficulty = topic.difficulty - w[6] * (rating - 3);
+                topic.difficulty = Math.min(Math.max(1, topic.difficulty), 10);
+                if (rating === 1) {
+                    topic.stability = w[11] * Math.pow(topic.difficulty, -w[12]) * (Math.pow(topic.stability + 1, w[13]) - 1) * Math.exp((1 - retrievability) * w[14]);
+                } else {
+                    topic.stability = topic.stability * (1 + Math.exp(w[8]) * (11 - topic.difficulty) * Math.pow(topic.stability, -w[9]) * (Math.exp((1 - retrievability) * w[10]) - 1));
+                }
+            }
+            topic.stability = Math.max(0.1, topic.stability);
+
+            let newState;
+            if (rating === 1) {
+                newState = 'Relearning';
+            } else if (oldState === 'New' || oldState === 'Learning' || oldState === 'Relearning') {
+                newState = (rating >= 3) ? 'Review' : 'Learning';
+            } else {
+                newState = 'Review';
+            }
+            topic.state = newState;
+
+            const nextReviewDate = new Date();
+            if (topic.state === 'Learning' || topic.state === 'Relearning') {
+                const learningIntervalMinutes = rating === 1 ? 5 : 10;
+                nextReviewDate.setMinutes(now.getMinutes() + learningIntervalMinutes);
+            } else {
+                const reviewIntervalDays = Math.round(topic.stability * this.FACTOR);
+                nextReviewDate.setDate(now.getDate() + Math.max(1, reviewIntervalDays));
+            }
+
+            topic.lastReview = now;
+            topic.nextReview = nextReviewDate;
+            topic.reviewHistory.push({ date: now.toISOString(), rating: ratingStr, stability: topic.stability, difficulty: topic.difficulty, state: topic.state });
+
+            try {
+                await fetch(`/.netlify/functions/data/topics/${id}/rating`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topicData: topic })
+                });
+                return { rating: ratingStr, date: topic.lastReview };
+            } catch (error) {
+                console.error("Failed to update topic rating:", error);
+                // Should ideally revert local changes here, but for now we just show an error
+                showToast('ไม่สามารถบันทึกผลการทบทวนได้', 'error');
+            }
+        }
+
+        async logReflection(topicId, reviewDate, rating, reasons, notes) {
+            const topic = this.getTopicById(topicId);
+            if (topic) {
+                topic.reflectionHistory.push({ date: reviewDate, rating, reasons, notes });
+                try {
+                    await fetch(`/.netlify/functions/data/topics/${topicId}/reflection`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ reflectionHistory: topic.reflectionHistory })
+                    });
+                } catch (error) {
+                    console.error("Failed to log reflection:", error);
+                    topic.reflectionHistory.pop(); // Revert local change on failure
+                    showToast('ไม่สามารถบันทึกการสะท้อนผลได้', 'error');
+                }
+            }
+        }
+
+        // --- Utility and other functions (mostly unchanged) ---
         getTopicById(id) { return this.topics.find(t => t.id === Number(id)); }
         getAllTopics() { return [...this.topics]; }
-        deleteTopic(id) { this.topics = this.topics.filter(t => t.id !== Number(id)); this.saveDataToLocalStorage(); }
         getDueTopics(date = new Date()) {
             const now = new Date(date);
             return this.topics
-                .filter(topic => {
-                    if (!topic.nextReview) return false;
-                    const nextReviewDate = new Date(topic.nextReview);
-                    return nextReviewDate <= now;
-                })
+                .filter(topic => topic.nextReview && new Date(topic.nextReview) <= now)
                 .sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview));
         }
         getLearningTopics() {
@@ -497,63 +633,13 @@
                 return nextReviewDate > now && nextReviewDate <= endOfToday;
             }).sort((a,b) => new Date(a.nextReview) - new Date(b.nextReview));
         }
-        updateTopicRating(id, ratingStr) {
-            const topic = this.getTopicById(id);
-            if (!topic) return;
-            const ratingMap = { again: 1, hard: 2, good: 3, easy: 4 };
-            const rating = ratingMap[ratingStr];
-            const w = this.FSRS_PARAMS.w;
-            const now = new Date();
-            const lastReviewDate = topic.lastReview ? new Date(topic.lastReview) : new Date(topic.createdAt);
-            const elapsed_days = Math.max(0, (now.getTime() - lastReviewDate.getTime()) / (1000 * 3600 * 24));
-            const retrievability = Math.pow(1 + elapsed_days / (9 * topic.stability), this.DECAY);
-            const oldState = topic.state;
-            if (oldState === 'New') {
-                topic.difficulty = w[4] - w[5] * (rating - 3);
-                topic.stability = w[rating - 1];
-            } else {
-                topic.difficulty = topic.difficulty - w[6] * (rating - 3);
-                topic.difficulty = Math.min(Math.max(1, topic.difficulty), 10);
-                if (rating === 1) {
-                    topic.stability = w[11] * Math.pow(topic.difficulty, -w[12]) * (Math.pow(topic.stability + 1, w[13]) - 1) * Math.exp((1 - retrievability) * w[14]);
-                } else {
-                    topic.stability = topic.stability * (1 + Math.exp(w[8]) * (11 - topic.difficulty) * Math.pow(topic.stability, -w[9]) * (Math.exp((1 - retrievability) * w[10]) - 1));
-                }
-            }
-            topic.stability = Math.max(0.1, topic.stability);
-            let newState;
-            if (rating === 1) {
-                newState = 'Relearning';
-            } else if (oldState === 'New' || oldState === 'Learning' || oldState === 'Relearning') {
-                if (rating >= 3) {
-                    newState = 'Review';
-                } else {
-                    newState = 'Learning';
-                }
-            } else { 
-                newState = 'Review';
-            }
-            topic.state = newState;
-            const nextReviewDate = new Date();
-            if (topic.state === 'Learning' || topic.state === 'Relearning') {
-                const learningIntervalMinutes = rating === 1 ? 5 : 10;
-                nextReviewDate.setMinutes(now.getMinutes() + learningIntervalMinutes);
-            } else { 
-                const reviewIntervalDays = Math.round(topic.stability * this.FACTOR);
-                nextReviewDate.setDate(now.getDate() + Math.max(1, reviewIntervalDays));
-            }
-            topic.lastReview = now;
-            topic.nextReview = nextReviewDate;
-            topic.reviewHistory.push({ date: now.toISOString(), rating: ratingStr, stability: topic.stability, difficulty: topic.difficulty, state: topic.state });
-            this.saveDataToLocalStorage();
-            return { rating: ratingStr, date: topic.lastReview };
-        }
-        logReflection(topicId, reviewDate, rating, reasons, notes) {
-            const topic = this.getTopicById(topicId);
-            if (topic) {
-                topic.reflectionHistory.push({ date: reviewDate, rating, reasons, notes });
-                this.saveDataToLocalStorage();
-            }
+        getTopicPriority(topic) {
+            const againCount = topic.reviewHistory.filter(r => r.rating === 'again').length;
+            const isLeech = againCount >= 4;
+            if (topic.state === 'Learning' || topic.state === 'Relearning') return { level: 1, key: 'urgent', icon: '🔥' };
+            if (isLeech) return { level: 2, key: 'high', icon: '💀' };
+            if (topic.stability < 21) return { level: 3, key: 'standard', icon: '🟡' };
+            return { level: 4, key: 'general', icon: '' };
         }
         searchTopics(query) {
             const lowerCaseQuery = query.trim().toLowerCase();
@@ -602,58 +688,140 @@
             });
             return stats;
         }
+        getSubjectInsights(subjectId) {
+            const numSubjectId = Number(subjectId);
+            const subjectTopics = this.topics.filter(t => t.subjectId === numSubjectId);
+            if (subjectTopics.length === 0) {
+                return { stateDistribution: { new: 0, learning: 0, review: 0 }, hardestTopic: null, nextReviewTopic: null };
+            }
+            const stateDistribution = { new: 0, learning: 0, review: 0 };
+            subjectTopics.forEach(topic => {
+                let state = (topic.state || 'New').toLowerCase();
+                if (state === 'relearning' || state === 'learning') {
+                    stateDistribution.learning++;
+                } else if (state === 'review') {
+                    stateDistribution.review++;
+                } else {
+                    stateDistribution.new++;
+                }
+            });
+            const hardestTopic = [...subjectTopics].sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0))[0];
+            const nextReviewTopic = [...subjectTopics].filter(t => t.nextReview).sort((a, b) => new Date(a.nextReview) - new Date(b.nextReview))[0];
+            return { stateDistribution, hardestTopic, nextReviewTopic };
+        }
+        getAllData() { return { subjects: this.subjects, topics: this.topics }; }
+        loadAllData(data) {
+             // This function is now for local file import, not database loading
+            if (data && Array.isArray(data.subjects) && Array.isArray(data.topics)) {
+                // Here you might want to create a special API endpoint to bulk-insert this data
+                // For now, it will just load into the local session, but won't be saved automatically.
+                showToast("ฟังก์ชันนำเข้าข้อมูลยังไม่รองรับการบันทึกลงฐานข้อมูลโดยตรง", "error");
+                this.subjects = data.subjects;
+                this.topics = data.topics.map(topic => ({
+                    ...topic,
+                    nextReview: topic.nextReview ? new Date(topic.nextReview) : null,
+                    lastReview: topic.lastReview ? new Date(topic.lastReview) : null,
+                    createdAt: topic.createdAt ? new Date(topic.createdAt) : new Date(),
+                    reviewHistory: topic.reviewHistory || [],
+                    reflectionHistory: topic.reflectionHistory || []
+                }));
+                return { success: true, message: 'ข้อมูลถูกโหลดเข้ามาในหน้าเว็บ แต่ยังไม่ได้บันทึกลงฐานข้อมูลถาวร' };
+            }
+            return { success: false, message: 'Invalid data structure in file.' };
+        }
+        deleteAllData() {
+            // This needs to call a backend endpoint now
+            showToast("ฟังก์ชันนี้ยังไม่ถูกเชื่อมต่อกับฐานข้อมูล", "error");
+        }
     }
+
     document.addEventListener('DOMContentLoaded', () => {
         const service = new StudyService();
         const activeCharts = {};
         let currentTopicIdForModal = null;
         let currentReflectionData = {};
         let selectedSubjectId = null;
+        let isSortedByPriority = false;
+
         const ui = {
-            loadingOverlay: document.getElementById('loading-overlay'), toastContainer: document.getElementById('toast-container'),
-            themeToggleBtn: document.getElementById('theme-toggle-btn'), navButtons: document.querySelectorAll('.nav-btn'),
-            views: document.querySelectorAll('.view-content'), addTopicMainBtn: document.getElementById('add-topic-main-btn'),
-            globalSearchInput: document.getElementById('global-search-input'), mainHeaderBar: document.getElementById('main-header-bar'),
+            loadingOverlay: document.getElementById('loading-overlay'),
+            toastContainer: document.getElementById('toast-container'),
+            themeToggleBtn: document.getElementById('theme-toggle-btn'),
+            navButtons: document.querySelectorAll('.nav-btn'),
+            views: document.querySelectorAll('.view-content'),
+            addTopicMainBtn: document.getElementById('add-topic-main-btn'),
+            globalSearchInput: document.getElementById('global-search-input'),
+            mainHeaderBar: document.getElementById('main-header-bar'),
             dashboard: {
-                view: document.getElementById('dashboard-view'), countdownTgat: document.getElementById('countdown-tgat'),
-                countdownAlevel: document.getElementById('countdown-alevel'), coachAdviceContent: document.getElementById('coach-advice-content'),
-                due: document.getElementById('stats-due-value'), tomorrowDue: document.getElementById('stats-tomorrow-due-value'),
-                reviewsToday: document.getElementById('stats-reviews-today-value'), leechCount: document.getElementById('stats-leech-count-value'),
-                todaysQueueList: document.getElementById('todays-queue-list')
+                view: document.getElementById('dashboard-view'),
+                countdownTgat: document.getElementById('countdown-tgat'),
+                countdownAlevel: document.getElementById('countdown-alevel'),
+                coachAdviceContent: document.getElementById('coach-advice-content'),
+                due: document.getElementById('stats-due-value'),
+                tomorrowDue: document.getElementById('stats-tomorrow-due-value'),
+                reviewsToday: document.getElementById('stats-reviews-today-value'),
+                leechCount: document.getElementById('stats-leech-count-value'),
+                todaysQueueList: document.getElementById('todays-queue-list'),
+                sortQueueBtn: document.getElementById('sort-queue-btn'),
             },
             subjects: {
-                view: document.getElementById('subjects-view'), addForm: document.getElementById('add-subject-form'),
-                addInput: document.getElementById('new-subject-name'), list: document.getElementById('subjects-list'),
-                topicsList: document.getElementById('topics-for-subject-list'), insightsContainer: document.getElementById('subject-insights-container'),
-                insightHardestTopic: document.getElementById('insight-hardest-topic'), insightNextReview: document.getElementById('insight-next-review'),
-                subjectOverviewChart: document.getElementById('subject-overview-chart')
+                view: document.getElementById('subjects-view'),
+                addForm: document.getElementById('add-subject-form'),
+                addInput: document.getElementById('new-subject-name'),
+                list: document.getElementById('subjects-list'),
+                topicsList: document.getElementById('topics-for-subject-list'),
+                insightsContainer: document.getElementById('subject-insights-container'),
+                insightHardestTopic: document.getElementById('insight-hardest-topic'),
+                insightNextReview: document.getElementById('insight-next-review'),
+                subjectOverviewChart: document.getElementById('subject-overview-chart-in-subjects')
             },
-            troubleZone: { view: document.getElementById('trouble-zone-view'), leechList: document.getElementById('leech-list') },
+            troubleZone: {
+                view: document.getElementById('trouble-zone-view'),
+                leechList: document.getElementById('leech-list')
+            },
             analytics: {
-                view: document.getElementById('analytics-view'), forgetReasonChart: document.getElementById('forget-reasons-chart'),
-                subjectOverviewChart: document.getElementById('subjects-overview-chart')
+                view: document.getElementById('analytics-view'),
+                forgetReasonChart: document.getElementById('forget-reasons-chart'),
+                subjectsOverviewChart: document.getElementById('subjects-overview-chart-in-analytics')
             },
             data: {
-                view: document.getElementById('data-view'), exportBtn: document.getElementById('export-data-btn'),
-                importBtn: document.getElementById('import-data-btn'), importInput: document.getElementById('import-data-input'),
-                loadSampleBtn: document.getElementById('load-sample-data-btn'), deleteAllDataBtn: document.getElementById('delete-all-data-btn'),
-                exportReminderBanner: document.getElementById('export-reminder-banner'), exportReminderBtn: document.getElementById('export-reminder-btn')
+                view: document.getElementById('data-view'),
+                exportBtn: document.getElementById('export-data-btn'),
+                importBtn: document.getElementById('import-data-btn'),
+                importInput: document.getElementById('import-data-input'),
+                loadSampleBtn: document.getElementById('load-sample-data-btn'),
+                deleteAllDataBtn: document.getElementById('delete-all-data-btn'),
+                exportReminderBanner: document.getElementById('export-reminder-banner'),
+                exportReminderBtn: document.getElementById('export-reminder-btn')
             },
-            search: { dropdown: document.getElementById('search-results-dropdown') },
+            search: {
+                dropdown: document.getElementById('search-results-dropdown')
+            },
             modals: {
-                logReview: document.getElementById('log-review-modal'), logReviewName: document.getElementById('modal-log-topic-name'),
-                reflection: document.getElementById('reflection-modal'), reflectionName: document.getElementById('modal-reflection-topic-name'),
-                reflectionForm: document.getElementById('reflection-form'), reflectionNotes: document.getElementById('reflection-notes'),
-                topicDetails: document.getElementById('topic-details-modal'), detailsTopicName: document.getElementById('modal-details-topic-name'),
-                detailsState: document.getElementById('details-state'), detailsNextReview: document.getElementById('details-next-review'),
-                detailsStability: document.getElementById('details-stability'), detailsDifficulty: document.getElementById('details-difficulty'),
-                detailsHistoryList: document.getElementById('details-history-list'), showChartBtn: document.getElementById('show-chart-btn'),
-                chart: document.getElementById('chart-modal'), chartTopicName: document.getElementById('chart-modal-topic-name'),
-                addTopic: document.getElementById('add-topic-modal'), addTopicForm: document.getElementById('add-topic-form-modal'),
-                addTopicSelect: document.getElementById('topic-subject-select'), addTopicInput: document.getElementById('new-topic-name-modal'),
+                logReview: document.getElementById('log-review-modal'),
+                logReviewName: document.getElementById('modal-log-topic-name'),
+                reflection: document.getElementById('reflection-modal'),
+                reflectionName: document.getElementById('modal-reflection-topic-name'),
+                reflectionForm: document.getElementById('reflection-form'),
+                reflectionNotes: document.getElementById('reflection-notes'),
+                topicDetails: document.getElementById('topic-details-modal'),
+                detailsTopicName: document.getElementById('modal-details-topic-name'),
+                detailsState: document.getElementById('details-state'),
+                detailsNextReview: document.getElementById('details-next-review'),
+                detailsStability: document.getElementById('details-stability'),
+                detailsDifficulty: document.getElementById('details-difficulty'),
+                detailsHistoryList: document.getElementById('details-history-list'),
+                showChartBtn: document.getElementById('show-chart-btn'),
+                chart: document.getElementById('chart-modal'),
+                chartTopicName: document.getElementById('chart-modal-topic-name'),
+                addTopic: document.getElementById('add-topic-modal'),
+                addTopicForm: document.getElementById('add-topic-form-modal'),
+                addTopicSelect: document.getElementById('topic-subject-select'),
+                addTopicInput: document.getElementById('new-topic-name-modal'),
                 welcome: document.getElementById('welcome-modal')
             }
         };
+
         const showToast = (message, type = 'success') => {
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
@@ -665,6 +833,7 @@
                 toast.addEventListener('animationend', () => toast.remove());
             }, 3500);
         };
+
         const formatDate = (date) => {
             if (!date) return 'N/A';
             const d = new Date(date);
@@ -717,6 +886,7 @@
                activeCharts[canvasId] = new Chart(ctx, { type, data, options });
             }
         };
+
         function refreshAllUI(viewToSwitch = null) {
             showLoading(true);
             const currentView = viewToSwitch || document.querySelector('.view-content.active')?.id.replace('-view', '') || 'dashboard';
@@ -733,6 +903,7 @@
             const newView = document.getElementById(`${viewId}-view`);
             if (newView) { newView.classList.add('active'); }
             ui.navButtons.forEach(b => b.classList.toggle('active', b.dataset.view === viewId));
+
             switch (viewId) {
                 case 'dashboard': renderDashboardQueue(); break;
                 case 'subjects': renderSubjectsPage(); break;
@@ -740,19 +911,17 @@
                 case 'analytics': renderAnalytics(); break;
             }
         }
+
         function renderDashboardStats() {
-            const getTodaysReviewCount = () => {
+            const reviewsTodayCount = service.topics.reduce((count, topic) => {
                 const todayStr = new Date().toISOString().slice(0, 10);
-                try {
-                    const data = JSON.parse(localStorage.getItem('reviewsTodayData'));
-                    if (data && data.date === todayStr) return data.count;
-                } catch (e) { return 0; }
-                return 0;
-            };
-            let reviewsTodayCount = getTodaysReviewCount();
+                return count + topic.reviewHistory.filter(h => h.date.startsWith(todayStr)).length;
+            }, 0);
+
             const dueTopics = service.getDueTopics();
             const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
             const dueTomorrowTopics = service.getDueTopics(tomorrow);
+
             ui.dashboard.due.textContent = dueTopics.length;
             ui.dashboard.tomorrowDue.textContent = dueTomorrowTopics.length - dueTopics.length;
             ui.dashboard.reviewsToday.textContent = reviewsTodayCount;
@@ -760,15 +929,27 @@
             const { advice } = service.getCoachInsights(reviewsTodayCount);
             ui.dashboard.coachAdviceContent.innerHTML = `<p>${advice}</p>`;
         }
+
         function renderDashboardQueue() {
-            const dueTopics = service.getDueTopics();
+            let dueTopics = service.getDueTopics();
             const learningTopics = service.getLearningTopics();
+            if (isSortedByPriority) {
+                dueTopics.sort((a, b) => {
+                    const priorityA = service.getTopicPriority(a).level;
+                    const priorityB = service.getTopicPriority(b).level;
+                    if (priorityA !== priorityB) return priorityA - priorityB;
+                    return new Date(a.nextReview) - new Date(b.nextReview);
+                });
+            }
             let html = '';
             if (dueTopics.length > 0) {
                 html += `<li class="list-divider"><i class="fa-solid fa-star" style="color: var(--accent-color);"></i> พร้อมทบทวน</li>`;
-                html += dueTopics.map(t => `
-                    <li class="list-item" data-topic-id="${t.id}">
+                html += dueTopics.map(t => {
+                    const priority = service.getTopicPriority(t);
+                    return `
+                    <li class="list-item priority-${priority.key}" data-topic-id="${t.id}">
                         <div class="item-info" data-action="toggle-inline-details">
+                            <span class="priority-indicator">${priority.icon}</span>
                             <span class="name">${t.name}</span>
                             <span class="context">${service.getSubjectNameById(t.subjectId)}</span>
                         </div>
@@ -776,7 +957,8 @@
                             <button class="btn btn-sm btn-primary review-now-btn" data-topic-id="${t.id}"><i class="fas fa-star"></i> ทบทวน</button>
                         </div>
                         <div class="topic-insight-details"></div>
-                    </li>`).join('');
+                    </li>`;
+                }).join('');
             }
             if (learningTopics.length > 0) {
                 html += `<li class="list-divider"><i class="fa-solid fa-hourglass-start" style="color: var(--warning-color);"></i> กำลังเรียนรู้ (รอทบทวน)</li>`;
@@ -806,6 +988,7 @@
                 ui.dashboard.todaysQueueList.innerHTML = html;
             }
         }
+
         function renderSubjectsPage() {
             const subjects = service.getAllSubjects();
             ui.subjects.list.innerHTML = subjects.length > 0 ? subjects.map(s => `<li class="list-item" data-item-type="subject" data-item-id="${s.id}"><div class="item-info" data-action="select-subject"><span class="name">${s.name}</span><input type="text" class="edit-input" value="${s.name}" /></div><div class="item-actions"><button class="btn-action-icon edit-btn" data-action="edit-item" aria-label="Edit subject name"><i class="fas fa-pencil-alt"></i></button><button class="btn-action-icon delete-btn" data-action="delete-subject" aria-label="Delete subject"><i class="fas fa-trash-alt"></i></button></div></li>`).join('') : createEmptyState('ยังไม่มีบทเรียน<br>เพิ่มบทเรียนแรกของคุณด้านบนได้เลย');
@@ -825,22 +1008,25 @@
                 ui.subjects.insightsContainer.style.display = 'none';
             }
         }
+
         function renderTopicsForSelectedSubject() {
             if (!selectedSubjectId) return;
             const topics = service.getAllTopics().filter(t => t.subjectId === selectedSubjectId).sort((a,b) => a.name.localeCompare(b.name, 'th'));
             ui.subjects.topicsList.innerHTML = topics.length > 0 ? topics.map(t => `<li class="list-item" data-item-type="topic" data-item-id="${t.id}"><div class="item-info" data-action="open-topic-details"><span class="name">${t.name}</span><input type="text" class="edit-input" value="${t.name}" /><span class="context">ทบทวน: ${formatDate(t.nextReview)}</span></div><div class="item-actions"><button class="btn-action-icon edit-btn" data-action="edit-item" aria-label="Edit topic name"><i class="fas fa-pencil-alt"></i></button><button class="btn-action-icon delete-btn" data-action="delete-topic" aria-label="Delete topic"><i class="fas fa-trash-alt"></i></button></div></li>`).join('') : createEmptyState('ยังไม่มีหัวข้อในบทเรียนนี้');
         }
+
         function renderSubjectInsights(subjectId) {
             const insights = service.getSubjectInsights(subjectId);
             const { stateDistribution, hardestTopic, nextReviewTopic } = insights;
             ui.subjects.insightsContainer.style.display = 'block';
             ui.subjects.insightHardestTopic.textContent = hardestTopic ? hardestTopic.name : 'N/A';
             ui.subjects.insightNextReview.textContent = nextReviewTopic ? `${nextReviewTopic.name} (${formatDate(nextReviewTopic.nextReview)})` : 'N/A';
-            createChart('subject-overview-chart', 'doughnut', {
+            createChart('subject-overview-chart-in-subjects', 'doughnut', {
                 labels: ['ใหม่', 'กำลังเรียนรู้', 'ทบทวน'],
                 datasets: [{ data: [stateDistribution.new, stateDistribution.learning, stateDistribution.review], backgroundColor: ['#3b82f6', '#f59e0b', '#22c55e'], borderWidth: 0, }]
             }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '70%' });
         }
+
         function renderTroubleZone() {
             const leeches = service.getLeeches();
             const leechListEl = ui.troubleZone.leechList;
@@ -860,18 +1046,21 @@
                 }).join('') :
                 createEmptyState('ยอดเยี่ยม! ตอนนี้คุณไม่มีหัวข้อปราบเซียน');
         }
+
         function renderAnalytics() {
             const forgetData = service.getForgetReasonStats();
             createChart('forget-reasons-chart', 'doughnut', {
                 labels: ['แค่ลืม', 'สับสน', 'ไม่เข้าใจ', 'สะเพร่า', 'อื่นๆ'],
                 datasets: [{ label: 'เหตุผลการลืม', data: [forgetData.forgot, forgetData.confused, forgetData.concept_issue, forgetData.mistake, forgetData.other], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#6b7280'], borderColor: 'var(--bg-card)', borderWidth: 2, }]
             }, { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: 'var(--primary-text)' } } } });
+
             const subjectData = service.getStatsBySubject();
-            createChart('subjects-overview-chart', 'bar', {
+            createChart('subjects-overview-chart-in-analytics', 'bar', {
                 labels: subjectData.labels,
                 datasets: [ { label: 'ใหม่', data: subjectData.new, backgroundColor: '#3b82f6' }, { label: 'เรียนรู้', data: subjectData.learning, backgroundColor: '#f59e0b' }, { label: 'ทบทวน', data: subjectData.review, backgroundColor: '#22c55e' } ]
             }, { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } });
         }
+
         function openTopicDetailsModal(topicId) {
             const topic = service.getTopicById(topicId);
             if (!topic) return;
@@ -880,14 +1069,15 @@
             ui.modals.detailsTopicName.textContent = topic.name;
             ui.modals.detailsState.textContent = topic.state || 'New';
             ui.modals.detailsNextReview.textContent = formatDate(topic.nextReview);
-            ui.modals.detailsStability.textContent = topic.stability.toFixed(2);
-            ui.modals.detailsDifficulty.textContent = topic.difficulty.toFixed(2);
+            ui.modals.detailsStability.textContent = (topic.stability || 0).toFixed(2);
+            ui.modals.detailsDifficulty.textContent = (topic.difficulty || 0).toFixed(2);
             ui.modals.detailsHistoryList.innerHTML = topic.reviewHistory.length > 0 ? [...topic.reviewHistory].reverse().map(h => {
                 const ratingText = ratingThaiMap[h.rating] || h.rating;
-                return `<li class="rating-${h.rating}"><div><span class="history-item-rating">${ratingText}</span><div class="history-item-details">ความคงทน: ${h.stability.toFixed(2)} | ความยาก: ${h.difficulty.toFixed(2)}</div></div><span class="history-item-date">${new Date(h.date).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'medium' })}</span></li>`;
+                return `<li class="rating-${h.rating}"><div><span class="history-item-rating">${ratingText}</span><div class="history-item-details">ความคงทน: ${(h.stability || 0).toFixed(2)} | ความยาก: ${(h.difficulty || 0).toFixed(2)}</div></div><span class="history-item-date">${new Date(h.date).toLocaleString('th-TH', { dateStyle: 'short', timeStyle: 'medium' })}</span></li>`;
             }).join('') : '<li class="empty-state" style="padding: 1rem 0;">ไม่มีประวัติการทบทวน</li>';
             openModal(ui.modals.topicDetails);
         }
+
         function openChartModal(topicId) {
             const topic = service.getTopicById(topicId);
             if (!topic || topic.reviewHistory.length < 2) {
@@ -901,31 +1091,20 @@
             }, { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day' } }, y: { beginAtZero: true, title: { display: true, text: 'Stability (days)' } } } });
             openModal(ui.modals.chart);
         }
+
         function generateInlineTopicDetailsHTML(topicId) {
             const topic = service.getTopicById(topicId);
             if (!topic) return '<div class="empty-state">ไม่พบข้อมูลหัวข้อ</div>';
             const ratingThaiMap = { again: 'จำไม่ได้', hard: 'ยาก', good: 'จำได้ดี', easy: 'ง่ายมาก' };
             const historyHTML = topic.reviewHistory.length > 0 ? [...topic.reviewHistory].reverse().map(h => {
                 const ratingText = ratingThaiMap[h.rating] || h.rating;
-                return `<li class="rating-${h.rating}"><div><span class="history-item-rating">${ratingText}</span><div class="history-item-details">S: ${h.stability.toFixed(2)} | D: ${h.difficulty.toFixed(2)}</div></div><span class="history-item-date">${new Date(h.date).toLocaleDateString('th-TH', {day: '2-digit', month:'short'})}</span></li>`;
+                return `<li class="rating-${h.rating}"><div><span class="history-item-rating">${ratingText}</span><div class="history-item-details">S: ${(h.stability || 0).toFixed(2)} | D: ${(h.difficulty || 0).toFixed(2)}</div></div><span class="history-item-date">${new Date(h.date).toLocaleDateString('th-TH', {day: '2-digit', month:'short'})}</span></li>`;
             }).join('') : '<li class="empty-state" style="padding: 1rem 0;">ไม่มีประวัติ</li>';
             return `
                 <div class="details-primary-info">
-                    <div class="stat-card primary">
-                        <i class="fa-solid fa-brain"></i>
-                        <div><label>สถานะ</label><span>${topic.state || 'New'}</span></div>
-                    </div>
-                    <div class="stat-card primary">
-                        <i class="fa-solid fa-shield-halved"></i>
-                        <div><label>Stability</label><span>${topic.stability.toFixed(2)}</span></div>
-                    </div>
-                    <div class="stat-card primary">
-                        <i class="fa-solid fa-puzzle-piece"></i>
-                        <div><label>Difficulty</label><span>${topic.difficulty.toFixed(2)}</span></div>
-                    </div>
-                </div>
-                <div class="topic-actions-bar">
-                    <button class="btn btn-secondary btn-sm show-inline-chart-btn"><i class="fa-solid fa-chart-line"></i> ดูประวัติกราฟ</button>
+                    <div class="stat-card primary"> <i class="fa-solid fa-brain"></i> <div><label>สถานะ</label><span>${topic.state || 'New'}</span></div> </div>
+                    <div class="stat-card primary"> <i class="fa-solid fa-shield-halved"></i> <div><label>Stability</label><span>${(topic.stability || 0).toFixed(2)}</span></div> </div>
+                    <div class="stat-card primary"> <i class="fa-solid fa-puzzle-piece"></i> <div><label>Difficulty</label><span>${(topic.difficulty || 0).toFixed(2)}</span></div> </div>
                 </div>
                 <div class="topic-history">
                     <div class="card-header"><h4><i class="fa-solid fa-clock-rotate-left"></i> ประวัติล่าสุด</h4></div>
@@ -933,14 +1112,13 @@
                 </div>
             `;
         }
+
         function toggleInlineDetails(listItem, topicId) {
             const detailsContainer = listItem.querySelector('.topic-insight-details');
             if (!detailsContainer) return;
             const isExpanded = listItem.classList.contains('is-expanded');
             listItem.parentElement.querySelectorAll('.list-item.is-expanded').forEach(item => {
-                if (item !== listItem) {
-                    item.classList.remove('is-expanded');
-                }
+                if (item !== listItem) item.classList.remove('is-expanded');
             });
             if (isExpanded) {
                 listItem.classList.remove('is-expanded');
@@ -951,11 +1129,13 @@
                 listItem.classList.add('is-expanded');
             }
         }
+
         function renderSearchResultsDropdown(query) {
             const results = service.searchTopics(query);
             ui.search.dropdown.innerHTML = results.length > 0 ? results.map(t => `<div class="search-dropdown-item" data-action="open-topic-details" data-topic-id="${t.id}"><span class="name">${t.name}</span><span class="context">${t.subjectName}</span></div>`).join('') : '<div class="empty-state">ไม่พบผลลัพธ์</div>';
             ui.search.dropdown.classList.add('active');
         }
+
         function checkExportReminder() {
             const lastExportDate = localStorage.getItem('lastExportDate');
             const today = new Date().toISOString().slice(0, 10);
@@ -965,13 +1145,12 @@
                 ui.data.exportReminderBanner.style.display = 'none';
             }
         }
+
         document.body.addEventListener('click', e => {
             const target = e.target;
             if (!target.closest('.search-container')) { ui.search.dropdown.classList.remove('active'); }
-            if (target.closest('.modal-close-btn') || target.classList.contains('modal-container')) { 
-                closeAllModals(); 
-                return;
-            }
+            if (target.closest('.modal-close-btn') || target.classList.contains('modal-container')) { closeAllModals(); return; }
+
             const reviewBtn = target.closest('.review-now-btn');
             if (reviewBtn) {
                 const topicId = Number(reviewBtn.dataset.topicId);
@@ -983,25 +1162,17 @@
                 }
                 return;
             }
-            const inlineChartBtn = target.closest('.show-inline-chart-btn');
-            if (inlineChartBtn) {
-                const topicId = Number(inlineChartBtn.closest('.list-item').dataset.topicId);
-                if (topicId) {
-                   openChartModal(topicId);
-                }
-                e.stopPropagation();
-                return;
-            }
+
             const actionTarget = target.closest('[data-action]');
             if (!actionTarget) return;
+
             const action = actionTarget.dataset.action;
             const listItem = actionTarget.closest('.list-item');
             const itemId = listItem?.dataset.itemId || listItem?.dataset.topicId || actionTarget.dataset.topicId;
+
             switch (action) {
                 case 'toggle-inline-details':
-                    if (listItem && itemId) {
-                        toggleInlineDetails(listItem, Number(itemId));
-                    }
+                    if (listItem && itemId) toggleInlineDetails(listItem, Number(itemId));
                     break;
                 case 'open-topic-details':
                     if (itemId) {
@@ -1010,31 +1181,33 @@
                         ui.globalSearchInput.value = '';
                     }
                     break;
-                case 'select-subject': 
+                case 'select-subject':
                     if (listItem && !listItem.classList.contains('editing')) {
                         selectedSubjectId = Number(itemId);
                         renderSubjectsPage();
                     }
                     break;
-                case 'edit-item': 
-                    handleItemEdit(actionTarget); 
+                case 'edit-item':
+                    handleItemEdit(actionTarget);
                     break;
                 case 'delete-subject': {
                     const subject = service.subjects.find(s => s.id == itemId);
                     if (subject && confirm(`คุณแน่ใจหรือไม่ที่จะลบบทเรียน "${subject.name}"? การกระทำนี้จะลบหัวข้อทั้งหมดที่เกี่ยวข้องด้วย`)) {
-                        service.deleteSubject(Number(itemId));
-                        if (selectedSubjectId == itemId) selectedSubjectId = null;
-                        refreshAllUI('subjects');
-                        showToast('ลบบทเรียนแล้ว');
+                        service.deleteSubject(Number(itemId)).then(() => {
+                           if (selectedSubjectId == itemId) selectedSubjectId = null;
+                           refreshAllUI('subjects');
+                           showToast('ลบบทเรียนแล้ว');
+                        });
                     }
                     break;
                 }
                 case 'delete-topic': {
                     const topic = service.topics.find(t => t.id == itemId);
                     if (topic && confirm(`คุณแน่ใจหรือไม่ที่จะลบหัวข้อ "${topic.name}"?`)) {
-                        service.deleteTopic(Number(itemId));
-                        refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
-                        showToast('ลบหัวข้อแล้ว');
+                        service.deleteTopic(Number(itemId)).then(() => {
+                           refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
+                           showToast('ลบหัวข้อแล้ว');
+                        });
                     }
                     break;
                 }
@@ -1055,6 +1228,41 @@
                     break;
             }
         });
+
+        async function handleItemEditEnd(e) {
+            const input = e.target;
+            if (!input.classList.contains('edit-input')) return;
+            const listItem = input.closest('.list-item');
+            if (!listItem || !listItem.classList.contains('editing')) return;
+
+            const itemId = listItem.dataset.itemId;
+            const itemType = listItem.dataset.itemType;
+            const newName = input.value.trim();
+            const oldName = listItem.querySelector('.name').textContent;
+
+            if (newName === oldName || newName === "") { 
+                listItem.classList.remove('editing');
+                input.value = oldName;
+                return;
+            }
+
+            let result;
+            if (itemType === 'subject') {
+                result = await service.editSubject(itemId, newName);
+            } else {
+                result = await service.editTopic(itemId, newName);
+            }
+
+            if (result && !result.success) { 
+                showToast(result.message, 'error'); 
+                input.value = oldName;
+            } else { 
+                showToast(`${itemType === 'subject' ? 'บทเรียน' : 'หัวข้อ'}ถูกเปลี่ยนชื่อแล้ว`);
+            }
+            listItem.classList.remove('editing');
+            refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
+        }
+
         function handleItemEdit(target) {
             const listItem = target.closest('.list-item');
             if (!listItem || listItem.classList.contains('editing')) return;
@@ -1064,31 +1272,18 @@
             input.select();
             input.focus();
         }
-        function handleItemEditEnd(e) {
-            const input = e.target;
-            if (!input.classList.contains('edit-input')) return;
-            const listItem = input.closest('.list-item');
-            if (!listItem || !listItem.classList.contains('editing')) return;
-            const itemId = listItem.dataset.itemId;
-            const itemType = listItem.dataset.itemType;
-            const newName = input.value.trim();
-            const oldName = listItem.querySelector('.name').textContent;
-            if (newName === oldName || newName === "") { listItem.classList.remove('editing'); input.value = oldName; return; }
-            let result = itemType === 'subject' ? service.editSubject(itemId, newName) : service.editTopic(itemId, newName);
-            if (result && !result.success) { showToast(result.message, 'error'); input.value = oldName; } 
-            else { showToast(`${itemType === 'subject' ? 'บทเรียน' : 'หัวข้อ'}ถูกเปลี่ยนชื่อแล้ว`); }
-            listItem.classList.remove('editing');
-            refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
-        }
+
         ui.subjects.list.addEventListener('focusout', handleItemEditEnd);
         ui.subjects.list.addEventListener('keydown', e => { if (e.key === 'Enter') handleItemEditEnd(e); if (e.key === 'Escape') { e.target.closest('.list-item')?.classList.remove('editing'); renderSubjectsPage();} });
         ui.subjects.topicsList.addEventListener('focusout', handleItemEditEnd);
         ui.subjects.topicsList.addEventListener('keydown', e => { if (e.key === 'Enter') handleItemEditEnd(e); if (e.key === 'Escape') { e.target.closest('.list-item')?.classList.remove('editing'); renderTopicsForSelectedSubject();} });
+
         ui.navButtons.forEach(button => button.addEventListener('click', () => switchView(button.dataset.view)));
         ui.themeToggleBtn.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark-mode');
             localStorage.setItem('theme', document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light');
         });
+
         ui.globalSearchInput.addEventListener('input', debounce(e => {
             const query = e.target.value.trim();
             if (query) { renderSearchResultsDropdown(query); } else { ui.search.dropdown.classList.remove('active'); }
@@ -1097,19 +1292,16 @@
             const query = ui.globalSearchInput.value.trim();
             if (query) { renderSearchResultsDropdown(query); }
         });
-        ui.subjects.addForm.addEventListener('submit', e => {
+
+        ui.subjects.addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = ui.subjects.addInput.value.trim();
             if (name) {
-                const result = service.addSubject(name);
-                if(result) {
-                    service.saveDataToLocalStorage();
-                    showToast(`เพิ่มบทเรียน "${name}" แล้ว`);
-                    ui.subjects.addInput.value = '';
-                    refreshAllUI('subjects');
-                } else { showToast('มีบทเรียนชื่อนี้อยู่แล้ว', 'error'); }
+                const result = await service.addSubject(name);
+                if(result) ui.subjects.addInput.value = '';
             }
         });
+
         ui.addTopicMainBtn.addEventListener('click', () => {
             const subjects = service.getAllSubjects();
             if (subjects.length === 0) {
@@ -1122,33 +1314,29 @@
             ui.modals.addTopicForm.reset();
             openModal(ui.modals.addTopic);
         });
-        ui.modals.addTopicForm.addEventListener('submit', e => {
+
+        ui.modals.addTopicForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = ui.modals.addTopicInput.value.trim();
             const subjectId = ui.modals.addTopicSelect.value;
             if (name && subjectId) {
-                service.addTopic(name, subjectId);
-                service.saveDataToLocalStorage();
-                closeAllModals();
-                refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
-                showToast(`เพิ่มหัวข้อ "${name}" แล้ว`);
+                const newTopic = await service.addTopic(name, subjectId);
+                if (newTopic) {
+                   closeAllModals();
+                   refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
+                   showToast(`เพิ่มหัวข้อ "${name}" แล้ว`);
+                }
             }
         });
-        ui.modals.logReview.addEventListener('click', e => {
+
+        ui.modals.logReview.addEventListener('click', async (e) => {
             const ratingBtn = e.target.closest('.btn-rate');
             if (ratingBtn) {
                 const rating = ratingBtn.dataset.rating;
-                service.updateTopicRating(currentTopicIdForModal, rating);
-                const todayStr = new Date().toISOString().slice(0, 10);
-                let reviewData = { date: todayStr, count: 0 };
-                try {
-                    const storedData = JSON.parse(localStorage.getItem('reviewsTodayData'));
-                    if (storedData && storedData.date === todayStr) reviewData = storedData;
-                } catch(e) {}
-                reviewData.count++;
-                localStorage.setItem('reviewsTodayData', JSON.stringify(reviewData));
+                const result = await service.updateTopicRating(currentTopicIdForModal, rating);
+
                 if (rating === 'again') {
-                    const { date } = service.getTopicById(currentTopicIdForModal).reviewHistory.slice(-1)[0];
+                    const { date } = result;
                     currentReflectionData = { topicId: currentTopicIdForModal, date, rating };
                     const topic = service.getTopicById(currentTopicIdForModal);
                     ui.modals.reflectionName.textContent = `สะท้อนผล: ${topic.name}`;
@@ -1161,16 +1349,19 @@
                 }
             }
         });
-        ui.modals.reflectionForm.addEventListener('submit', e => {
+
+        ui.modals.reflectionForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const reasons = [...e.target.querySelectorAll('input[name="reason"]:checked')].map(cb => cb.value);
             const notes = ui.modals.reflectionNotes.value.trim();
-            service.logReflection(currentReflectionData.topicId, currentReflectionData.date, currentReflectionData.rating, reasons, notes);
+            await service.logReflection(currentReflectionData.topicId, currentReflectionData.date, currentReflectionData.rating, reasons, notes);
             closeAllModals();
             refreshAllUI(document.querySelector('.view-content.active')?.id.replace('-view',''));
             showToast('บันทึกการสะท้อนผลแล้ว');
         });
+
         ui.modals.showChartBtn.addEventListener('click', () => openChartModal(currentTopicIdForModal));
+
         ui.data.exportBtn.addEventListener('click', () => {
             try {
                 const dataStr = JSON.stringify(service.getAllData(), null, 2);
@@ -1178,7 +1369,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `study-tracker-backup-${new Date().toISOString().slice(0,10)}.json`;
+                a.download = `learnney-backup-${new Date().toISOString().slice(0,10)}.json`;
                 a.click();
                 URL.revokeObjectURL(url);
                 showToast('ส่งออกข้อมูลสำเร็จ');
@@ -1189,6 +1380,7 @@
                 console.error(e);
             }
         });
+
         ui.data.importBtn.addEventListener('click', () => ui.data.importInput.click());
         ui.data.importInput.addEventListener('change', e => {
             const file = e.target.files[0];
@@ -1199,35 +1391,53 @@
                     const data = JSON.parse(event.target.result);
                     const result = service.loadAllData(data);
                     if(result.success) {
-                        service.saveDataToLocalStorage();
                         refreshAllUI();
-                        showToast('นำเข้าข้อมูลสำเร็จ!');
+                        showToast(result.message || 'โหลดข้อมูลเข้าหน้าเว็บสำเร็จ');
                     } else { showToast(result.message || 'ไฟล์ข้อมูลไม่ถูกต้อง', 'error'); }
                 } catch (err) { showToast('ไฟล์เสียหายหรือไม่ใช่ JSON', 'error'); }
             };
             reader.readAsText(file);
             e.target.value = '';
         });
+
         ui.data.exportReminderBtn.addEventListener('click', () => ui.data.exportBtn.click());
+
         ui.data.loadSampleBtn.addEventListener('click', () => {
-            if (confirm('คุณแน่ใจหรือไม่? การกระทำนี้จะลบข้อมูลปัจจุบันทั้งหมดและแทนที่ด้วยข้อมูลตัวอย่าง')) {
-                service.generateSampleData();
-                service.saveDataToLocalStorage();
-                refreshAllUI();
-                showToast('โหลดข้อมูลตัวอย่างสำเร็จ');
-            }
+            alert("ฟังก์ชันนี้ยังไม่รองรับการทำงานกับฐานข้อมูล");
         });
         ui.data.deleteAllDataBtn.addEventListener('click', () => {
-            if (confirm('คำเตือน! คุณกำลังจะลบข้อมูลทั้งหมดอย่างถาวร การกระทำนี้ไม่สามารถย้อนกลับได้ คุณแน่ใจหรือไม่?')) {
-                service.deleteAllData();
-                refreshAllUI();
-                showToast('ลบข้อมูลทั้งหมดแล้ว');
+            if (confirm('คำเตือน! คุณกำลังจะลบข้อมูลทั้งหมดจากฐานข้อมูลอย่างถาวร การกระทำนี้ไม่สามารถย้อนกลับได้ คุณแน่ใจหรือไม่?')) {
+                 alert("ฟังก์ชันนี้ยังไม่ถูกเชื่อมต่อกับฐานข้อมูล");
             }
         });
-        // เพิ่มคำว่า async เข้าไปข้างหน้าฟังก์ชัน
+
+        ui.dashboard.sortQueueBtn.addEventListener('click', () => {
+            isSortedByPriority = !isSortedByPriority;
+            ui.dashboard.sortQueueBtn.innerHTML = isSortedByPriority ? `<i class="fa-solid fa-clock"></i> เรียงตามเวลา` : `<i class="fa-solid fa-sort-amount-down"></i> เรียงตามความสำคัญ`;
+            ui.dashboard.sortQueueBtn.classList.toggle('btn-primary', isSortedByPriority);
+            ui.dashboard.sortQueueBtn.classList.toggle('btn-secondary', !isSortedByPriority);
+            renderDashboardQueue();
+        });
+
         async function initialize() {
             const examDates = { tgat: "2025-12-07T09:00:00", alevel: "2026-03-14T09:00:00" };
-            const updateCountdown = () => { /* ...โค้ดเดิม ไม่ต้องแก้... */ };
+            const updateCountdown = () => {
+                const render = (el, date) => {
+                    if (!el) return;
+                    const diff = (new Date(date).getTime() - Date.now()) / 1000;
+                    if(diff < 0) {
+                        el.innerHTML = `<div><span>0</span><label>Days</label></div><div><span>00</span><label>Hours</label></div><div><span>00</span><label>Mins</label></div><div><span>00</span><label>Secs</label></div>`;
+                        return;
+                    }
+                    const d = Math.floor(diff / 86400), h = Math.floor(diff % 86400 / 3600), m = Math.floor(diff % 3600 / 60), s = Math.floor(diff % 60);
+                    el.querySelector('[data-unit="days"]').textContent = d;
+                    el.querySelector('[data-unit="hours"]').textContent = h.toString().padStart(2, '0');
+                    el.querySelector('[data-unit="mins"]').textContent = m.toString().padStart(2, '0');
+                    el.querySelector('[data-unit="secs"]').textContent = s.toString().padStart(2, '0');
+                };
+                render(ui.dashboard.countdownTgat, examDates.tgat);
+                render(ui.dashboard.countdownAlevel, examDates.alevel);
+            };
 
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
@@ -1236,13 +1446,12 @@
                 document.documentElement.classList.remove('dark-mode');
             }
 
-            // ลบ service.loadDataFromLocalStorage(); บรรทัดเก่าทิ้งไป
-            // แล้วใส่ 3 บรรทัดนี้เข้าไปแทน
             showLoading(true);
             await service.loadDataFromServer();
             showLoading(false);
 
             refreshAllUI('dashboard');
+
             setInterval(updateCountdown, 1000);
             setInterval(() => {
                 if (document.getElementById('dashboard-view').classList.contains('active')) {
@@ -1250,6 +1459,7 @@
                 }
             }, 30000);
             updateCountdown();
+
             setTimeout(() => {
                 const data = service.getAllData();
                 if (data.subjects.length === 0 && data.topics.length === 0) {
@@ -1257,6 +1467,7 @@
                 }
             }, 500);
         }
+
         initialize();
     });
     </script>
