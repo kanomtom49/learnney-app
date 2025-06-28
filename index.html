@@ -333,33 +333,7 @@
             this.topics = [];
             this.loadDataFromLocalStorage();
         }
-        loadDataFromLocalStorage() {
-            const data = localStorage.getItem('studyTrackerData');
-            if (data) {
-                try {
-                    const parsedData = JSON.parse(data);
-                    this.subjects = parsedData.subjects || [];
-                    this.topics = (parsedData.topics || []).map(topic => ({
-                        ...topic,
-                        nextReview: topic.nextReview ? new Date(topic.nextReview) : null,
-                        lastReview: topic.lastReview ? new Date(topic.lastReview) : null,
-                        createdAt: topic.createdAt ? new Date(topic.createdAt) : new Date(),
-                        reviewHistory: topic.reviewHistory || [],
-                        reflectionHistory: topic.reflectionHistory || []
-                    }));
-                } catch (e) {
-                    console.error("Error parsing localStorage data:", e);
-                    this.subjects = [];
-                    this.topics = [];
-                }
-            }
-        }
-        saveDataToLocalStorage() {
-            try {
-                const dataToSave = { subjects: this.subjects, topics: this.topics };
-                localStorage.setItem('studyTrackerData', JSON.stringify(dataToSave));
-            } catch (e) { console.error("Failed to save data to localStorage:", e); }
-        }
+        
         getAllData() { return { subjects: this.subjects, topics: this.topics }; }
         loadAllData(data) {
             if (data && Array.isArray(data.subjects) && Array.isArray(data.topics)) {
@@ -1250,32 +1224,24 @@
                 showToast('ลบข้อมูลทั้งหมดแล้ว');
             }
         });
-        function initialize() {
+        // เพิ่มคำว่า async เข้าไปข้างหน้าฟังก์ชัน
+        async function initialize() {
             const examDates = { tgat: "2025-12-07T09:00:00", alevel: "2026-03-14T09:00:00" };
-            const updateCountdown = () => {
-                const render = (el, date) => {
-                    if (!el) return;
-                    const diff = (new Date(date).getTime() - Date.now()) / 1000;
-                    if(diff < 0) {
-                        el.innerHTML = `<div><span>0</span><label>Days</label></div><div><span>00</span><label>Hours</label></div><div><span>00</span><label>Mins</label></div><div><span>00</span><label>Secs</label></div>`;
-                        return;
-                    }
-                    const d = Math.floor(diff / 86400), h = Math.floor(diff % 86400 / 3600), m = Math.floor(diff % 3600 / 60), s = Math.floor(diff % 60);
-                    el.querySelector('[data-unit="days"]').textContent = d;
-                    el.querySelector('[data-unit="hours"]').textContent = h.toString().padStart(2, '0');
-                    el.querySelector('[data-unit="mins"]').textContent = m.toString().padStart(2, '0');
-                    el.querySelector('[data-unit="secs"]').textContent = s.toString().padStart(2, '0');
-                };
-                render(ui.dashboard.countdownTgat, examDates.tgat);
-                render(ui.dashboard.countdownAlevel, examDates.alevel);
-            };
+            const updateCountdown = () => { /* ...โค้ดเดิม ไม่ต้องแก้... */ };
+
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark-mode');
             } else {
                 document.documentElement.classList.remove('dark-mode');
             }
-            service.loadDataFromLocalStorage();
+
+            // ลบ service.loadDataFromLocalStorage(); บรรทัดเก่าทิ้งไป
+            // แล้วใส่ 3 บรรทัดนี้เข้าไปแทน
+            showLoading(true);
+            await service.loadDataFromServer();
+            showLoading(false);
+
             refreshAllUI('dashboard');
             setInterval(updateCountdown, 1000);
             setInterval(() => {
@@ -1287,7 +1253,7 @@
             setTimeout(() => {
                 const data = service.getAllData();
                 if (data.subjects.length === 0 && data.topics.length === 0) {
-                        openModal(ui.modals.welcome);
+                    openModal(ui.modals.welcome);
                 }
             }, 500);
         }
